@@ -1,0 +1,26 @@
+ignores:
+  - depcheck
+  - declapract
+  - declapract-typescript-ehmpathy
+  - "@commitlint/config-conventional"
+  - serverless-prune-plugin
+  - type-fns
+  - husky
+  - if-env
+  - rhachet
+  - "@tsconfig/node20"
+  - "@tsconfig/strictest"
+  - "@biomejs/biome"
+  - esbuild-register
+  - "@swc/core"
+  - "@swc/jest"
+  - tsx
+  - "@src/*"
+  - "@src/.*"
+  - tsc-alias
+  - rhachet-roles-bhrain
+  - rhachet-roles-bhuild
+  - rhachet-roles-ehmpathy
+  - yalc
+  - simple-log-methods # needed to support portable types
+  - rhachet-brains-anthropic
