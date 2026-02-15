@@ -1,0 +1,64 @@
+illustrate the vision for khlone — remote robot clones for development
+
+emit into .behavior/v2026_02_10.remote-compute/1.vision.v3.md
+
+---
+
+khlone = a local/remote coordinator that enables remote robot clones
+
+key concepts:
+- one cloud machine per worksite (typically per git worktree)
+- local tui handles dispatch, status, attach, conflict resolution
+- sync via git patches (batch), not live filesystem mount
+- reconnect on dropped connections, queue when offline
+- conflict notification + manual resolution (no auto-merge)
+- async batch model, not teletype/real-time
+
+paint a picture of what the world looks like when khlone is in use
+
+testdrive the contract we propose via realworld examples
+
+specifically,
+
+## the outcome world
+
+- what does a day-in-the-life look like with khlone?
+- what's the before/after contrast?
+- what's the "aha" moment where the value clicks?
+
+## user experience
+
+- what usecases do folks fulfill? what goals?
+- what khlone commands do they use?
+- what timelines do they go through?
+- how do they handle conflicts?
+
+## architecture
+
+- what components exist?
+- how does the tui communicate with remote clones?
+- how does git patch sync work?
+- where does state live?
+
+## mental model
+
+- how would users describe khlone to a friend?
+- what analogies or metaphors fit?
+- what terms would they use vs what terms would we use?
+
+## evaluation
+
+- how well does it solve the goals?
+- what are the pros? the cons?
+- what edgecases exist and how does khlone keep users in a pit of success?
+- cost comparison vs v1 (homelab) and v2 (all-cloud)
+
+## open questions
+
+- orchestrator design
+- patch conflict resolution ux
+- multi-worktree coordination
+- secrets management
+- instance lifecycle (when to spin up/down)
+
+uncover awkward tradeoffs
