@@ -1,0 +1,39 @@
+emit a handoff brief into .behavior/v2026_02_15.khlone-v0/3.4.blueprint.handoff.contract.braincli.v1.i1.md
+
+which declares the contract implicitly required within
+- the blueprint .behavior/v2026_02_15.khlone-v0/3.3.blueprint.v1.i1.md 
+- the vision .behavior/v2026_02_15.khlone-v0/1.vision.md 
+
+of the BrainCli 
+
+so that we can subsequently hand it off to rhachet to implement
+
+---
+
+be specific about exactly hwat is required and why 
+
+be specific about what is not required too, but is optional
+
+---
+
+be specific about what is flexible too
+
+i.e., what are the fundamentals that need to be fulfilled
+
+and how they need to work
+
+---
+
+less specific about the exact contracts, but do supply them if you have a preference for what they'd look like
+
+---
+
+then, show some examples of usage via playtest demos
+
+how exactly do you need to use the BrainCli to fulfill the blueprint and vision?
+
+what exactly do you need from it?
+
+---
+
+emit into .behavior/v2026_02_15.khlone-v0/3.4.blueprint.handoff.contract.braincli.v1.i1.md
