@@ -1,0 +1,116 @@
+lets create a zoomin blueprint specifically on .dispatch ; how will dispatch integrate with rhachet to work?  first,        
+  leverage .behavior/v2026_02_12.khlone-worksite/3.1.research.references._.v1.src
+
+lookup the exact rhachet docs to as a reference
+
+
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ also, assume that we redefine `actor.{run,act,ask}` from solid/rigid/fluid -> `actor.{act,ask}` , to match the              
+  BrainChoice.{act,ask} paradime of 'act = readwrtie, ask =readonly'                                                          
+─────────────────────────────────────────────────────────────────────────────────────
+
+
+──────────
+❯ and lets document we want to do that to be more explicit                                                                    
+                                                                                                                              
+  and that solid/rigid/fluid is really only a RoleSkill concern; i.e., when actor skills are registered, that's where the     
+  .solid|rigid|fluid comes into play ; skills still come in those three. but they can each be run under ask or act mode, and  
+  the actor disambiguates how to find which grain of determinism that skill comes from (which defines _how_ its run)
+
+
+
+
+                 
+❯ how clearly does the dispatch blueprint vicerally walk through how a khlone act|ask will get translated to a brain          
+  action?                                                                                                                     
+  also, how does it relate to the underneath brain repl interactive? e.g., the claude-code interactive interface?             
+                                                                                                                              
+  i.e., do we need to extend those brains-packages with a BrainCli interface, so we can explicitly enroll the clis?           
+                                                                                                                              
+  also, how does khlone keep those clis alive? does it have a daemon per clone? how do we literally manage the threads?       
+  and ensure that at anny time, someone could attach to --talk to it?                                                         
+                                                                                                                              
+  walk through a full usecase with start headless in background, send followup question, then watch, then attach and          
+  talk, then watch some more, then --await and pipe output                                                                    
+                                                                                                                              
+  i want to see the exact codepath that would fulfill that - what needs to be built vs what can be reused                     
+
+
+----
+
+
+follow the process articulated here to craft the blueprint
+
+.behavior/v2026_02_12.khlone-worksite/3.3.blueprint.v1.src
+
+
+except emit into .behavior/v2026_02_12.khlone-worksite/2.3.criteria.zoom1.blueprint.v1.i1.md
+---
+
+propose a blueprint for how we can implement the wish described
+- in .behavior/v2026_02_12.khlone-worksite/0.wish.md
+- and articulated above
+
+follow the patterns already present in this repo
+
+---
+
+enforce thorough test coverage for proof of behavior satisfaction
+- unit tests for all domain logic
+- integration tests for all repo <-> access boundaries (os, apis, sdks, daos, etc)
+- integration tests for all end <-> end flows
+- acceptance tests for core blackbox behaviors
+
+---
+
+include a treestruct of filediffs
+
+**legend:**
+- `[+] create` — file to create
+- `[~] update` — file to update
+- `[-] delete` — file to delete
+
+
+---
+
+include a treestruct of codepaths
+
+**legend:**
+- `[+]` create — codepath to create
+- `[~]` update — codepath to update
+- `[○]` retain — codepath to retain
+- `[-]` delete — codepath to delete
+- `[←]` reuse — codepath to reuse from elsewhere
+- `[→]` eject — codepath to decompose for reuse
+
+
+---
+
+remember, the purpose of the blueprint is to declare what the execution will adhere to
+
+we want to see
+- what contracts will be used
+- how domain.objects and domain.operations are decomposed and recomposed
+- what the codepaths are, their ease of maintenance and readability
+
+---
+
+reference the below for full context
+- .behavior/v2026_02_12.khlone-worksite/0.wish.md
+- .behavior/v2026_02_12.khlone-worksite/1.vision.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/2.1.criteria.blackbox.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/2.3.criteria.blueprint.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.1.research.access._.v1.i1.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.1.research.claims._.v1.i1.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.1.research.domain._.v1.i1.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.1.research.domain.terms.v1.i1.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.1.research.patterns._.code.prod.v1.i1.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.1.research.patterns._.code.test.v1.i1.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.1.research.patterns._.oss.levers.v1.i1.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.1.research.templates._.v1.i1.md (if declared)
+- .behavior/v2026_02_12.khlone-worksite/3.2.distill.domain._.v1.i1.md (if declared)
+
+
+----
+
+

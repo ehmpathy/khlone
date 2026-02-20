@@ -1,0 +1,130 @@
+the vision, criteria, and blueprint declared here to fulfill the wish in .behavior/v2026_02_15.khlone-v0
+
+is likely too large to do within one pass of one brain's focus
+
+---
+
+instead, we should decompose it into discrete, self-contained deliverables which fulfill concrete usable behavior in isolated components
+
+that way, we can incrementally build up to the full v0 release
+
+---
+
+review the blueprint, blueprint.zooms, criteria, and vision
+
+and propose a decomposition of contained sub-behaviors that we can fulfill in order to incrementallly build up to the full behavior
+
+think of them as isolated blocks which incrementally build up to the full picture.
+
+each block should release a complete net-increase in behavioral capacity
+
+no partial untestable dependencies
+
+each subbehavior should have clear playtests, boundaries, and clearly increment to the north star complete behavior
+
+---
+
+emit a proposal into .behavior/v2026_02_15.khlone-v0/3.5.decomposition.v1.i1.md
+
+---
+
+## lessons from iteration
+
+these are hard-won lessons from the v1.i1 decomposition process. apply them to reach a better decomposition faster:
+
+### 1. vertical slices over horizontal slices
+
+**bad:** "block A: all domain objects + all DAOs + all status views" (horizontal layer cake — one layer of the stack, end to end)
+**good:** "block A: one user action end-to-end with the minimum machinery required" (vertical slice — all layers, for one action)
+
+horizontal slices produce blocks with no real behavioral capacity — "the state layer exists but no action layer consumes it yet" is not a useful increment. vertical slices produce blocks where each one delivers a complete user-faced action.
+
+**the test:** can a human use the block's output to do real work? if the answer is "no, but it prepares infrastructure for later," it's a horizontal slice. merge it into the block that makes it useful.
+
+### 2. start stateless — add persistence only when a block needs durability
+
+the first instinct is to build all persistence up front (DAOs, state directories, filesystem helpers). resist this. a long-lived process can hold all state in memory for the early blocks. persistence is only justified when a specific block needs to survive process boundaries:
+
+- data must outlive a process crash → persistence
+- data must be visible to other processes → persistence
+- data must survive across sessions → persistence
+
+if the process that owns the data is alive, in-memory state + IPC queries replace DAO reads. no disk state needed.
+
+**the test:** for each DAO, ask "what breaks if this is in-memory instead?" if the answer is "the process must be alive to query it" — that's acceptable for early blocks.
+
+### 3. each block carries only the infrastructure it needs
+
+**bad:** "block A ships all 8 DAOs because future blocks will need them"
+**good:** "block A ships zero DAOs. block F ships 6. block G ships 2."
+
+each piece of infrastructure (DAO, adapter, helper) arrives with the block that creates its behavioral need. this prevents dead infrastructure (code that exists but has no consumer) and keeps each block self-contained.
+
+**the test:** for each file in a block, ask "which playtest breaks if I remove this file?" if no playtest breaks, the file belongs in a later block.
+
+### 4. separate contracts from consumers
+
+if a block depends on an external contract (interface + supplier), that contract is a separate deliverable. this is natural when:
+- different concern (the contract vs the system that uses it)
+- different destination (the contract may eject to another repo)
+- independently testable (integration test against a real external process)
+- parallelizable (contract and consumer can be built at the same time)
+
+### 5. separate in-process recovery from cross-process recovery
+
+recovery within a live supervisor (a child process dies, the supervisor reboots it) is stateless — the supervisor holds all refs in memory. no persistence required.
+
+recovery across process boundaries (the supervisor itself dies) requires persistence — state must survive on disk so a new supervisor can resume.
+
+these are separate blocks with different infrastructure needs. do not conflate them.
+
+### 6. playtests must demonstrate real user value
+
+**bad playtest:** "status shows empty state" — what can the human DO with this?
+**good playtest:** "human dispatches work and gets their shell back" — the human accomplished a task.
+
+if a block's best playtest is "look at this state that exists," the block does not ship real behavioral capacity. merge it into the block that makes it useful.
+
+**the test:** describe the playtest to someone who has never seen the codebase. if their reaction is "so what?", the block needs a stronger behavioral core.
+
+### 7. every operation must appear in exactly one block
+
+the blueprint declares a fixed set of operations. each operation must be assigned to exactly one block — the block that first creates its behavioral need. if an operation is "implicit" (needed by a codepath but not named in the handoff), it still belongs to a block and must be tracked.
+
+**the test:** the sum of per-block operation counts must equal the blueprint's total operation count. if it doesn't, operations are either absent or double-counted.
+
+include an **operation-to-block matrix** in the decomposition that maps every blueprint operation to its block. mark implicit dependencies (needed but not named in the handoff's "what to build") with `*`. this makes the gap visible and prevents handoff docs from undercount of their scope.
+
+### 8. declare inter-block dependencies in the dependency tree, not just prose
+
+if block E depends on block D (not just on the root block), that dependency must appear in the dependency tree diagram — not only in prose text. reviewers scan the tree to understand build order; buried prose dependencies get lost.
+
+**the test:** for each block, can you determine all its prerequisites by read of the dependency tree alone? if you need to read the block's handoff to discover a dependency, the tree is incomplete.
+
+### 9. name operations in handoff docs — do not rely on generic descriptions
+
+**bad:** "enhancements (2 prod, 2 test)" — which two operations? a builder must read the blueprint and cross-reference to figure it out.
+**good:** "`genFoo` — ensure resource alive; `setFoo` — respawn via continuation"
+
+every prod file that a block delivers should be named in the handoff's "what to build" section. anonymous file counts create ambiguity at handoff time.
+
+### 10. reconcile file counts across documents
+
+the decomposition's cumulative file count may not match the blueprint's total. this is expected when the blueprint counts all files while the decomposition only counts files explicitly assigned to blocks. document the gap and explain which files account for the difference (e.g., "6 implicit operations in block A account for 12 files not separately itemized").
+
+**the test:** `sum(block subtotals)` vs `blueprint total`. if they differ, add a reconciliation note.
+
+### 11. do not leak supplier abstractions into consumer-layer prose
+
+when the system depends on an external contract, only reference the contract's public surface in the consumer's docs. implementation details below that surface (internal protocols, OS signals, vendor CLI flags) belong to the supplier — not the consumer.
+
+**bad:** reference to internal mechanisms the supplier owns (e.g., raw protocol names, OS-level signal handlers)
+**good:** reference to the contract's typed methods and events
+
+apply this at every layer: vision, criteria, blueprint, decomposition, handoff docs. a single leaked term creates confusion about which layer owns the concern.
+
+### 12. entry points are two-phase: declare early, implement per-block
+
+all entry points (e.g., CLI commands, API routes) are declared in the first block so that the entry router is complete and unknown commands produce helpful errors. but entry point *bodies* are implemented in the block that delivers the behavior. stubs throw "not yet available" until their block lands.
+
+document this two-phase model explicitly so that file counts make sense — the first block's entry point file count includes all commands, but only a subset have real implementations.

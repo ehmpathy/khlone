@@ -1,0 +1,61 @@
+illustrate the vision for an all-cloud approach to remote-compute
+
+emit into .behavior/v2026_02_10.remote-compute/1.vision.v2.md
+
+---
+
+pivot from v1 (homelab + cloud hybrid) to v2 (all-cloud, no local hardware)
+
+key assumptions:
+- ai agents do most development work (file edits are infrequent for humans)
+- local machine only needs to dispatch requests and display results
+- compute scales elastically based on task demands
+- pay-per-use beats fixed hardware for sporadic or burst usage
+
+paint a picture of what the world looks like when this wish is fulfilled
+
+testdrive the contract we propose via realworld examples
+
+specifically,
+
+## the outcome world
+
+- what does a day-in-the-life look like with this in place?
+- what's the before/after contrast?
+- what's the "aha" moment where the value clicks?
+
+## user experience
+
+- what usecases do folks fulfill? what goals?
+- what contract inputs & outputs do they leverage?
+- what would it look like to leverage them?
+- what timelines do they go through?
+
+## architecture
+
+- what components exist?
+- how do they communicate?
+- where does state live?
+
+## mental model
+
+- how would users describe this to a friend?
+- what analogies or metaphors fit?
+- what terms would they use vs what terms would we use?
+
+## evaluation
+
+- how well does it solve the goals?
+- what are the pros? the cons?
+- what edgecases exist and how do our contracts keep users in a pit of success?
+- cost comparison vs v1 (homelab)
+
+## open questions
+
+- orchestrator design
+- agent communication protocol
+- secrets management
+- repo sync strategy
+- when does cloud lose to hardware?
+
+uncover awkward tradeoffs
