@@ -1,4 +1,8 @@
 export {
+  type BrainAuthAnthropic,
+  isBrainAuthAnthropic,
+} from './BrainAuthAnthropic';
+export {
   type AnthropicBrainCliConfig,
   type AnthropicBrainCliSlug,
   getOneAnthropicBrainCliConfig,

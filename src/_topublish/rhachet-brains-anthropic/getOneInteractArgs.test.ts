@@ -1,8 +1,8 @@
 import { BrainSeries } from 'rhachet';
 import { given, then, when } from 'test-fns';
 
-import { getOneAnthropicBrainCliConfig } from '../BrainCli.config';
-import { getOneInteractArgs } from '../getOneInteractArgs';
+import { getOneAnthropicBrainCliConfig } from './BrainCli.config';
+import { getOneInteractArgs } from './getOneInteractArgs';
 
 const config = getOneAnthropicBrainCliConfig({
   slug: 'claude@anthropic/claude/opus/v4.5',

@@ -1,8 +1,14 @@
 import { type ChildProcess, spawn } from 'child_process';
-import { UnexpectedCodePathError } from 'helpful-errors';
+import { BadRequestError, UnexpectedCodePathError } from 'helpful-errors';
 import type { BrainSeries } from 'rhachet';
+import { assure } from 'type-fns';
 
 import type { BrainCli } from '../rhachet/BrainCli';
+import type { ContextBrainAuth } from '../rhachet/ContextBrainAuth';
+import {
+  type BrainAuthAnthropic,
+  isBrainAuthAnthropic,
+} from './BrainAuthAnthropic';
 import { getOneAnthropicBrainCliConfig } from './BrainCli.config';
 import { getOneBrainOutputFromStreamJson } from './getOneBrainOutputFromStreamJson';
 import { getOneDispatchArgs } from './getOneDispatchArgs';
@@ -31,10 +37,28 @@ const getOneClaudeCliPath = (): string => {
  */
 export const genBrainCli = async (
   input: { slug: string },
-  context: { cwd: string },
+  context: { cwd: string } & ContextBrainAuth<{
+    anthropic?: BrainAuthAnthropic;
+  }>,
 ): Promise<BrainCli> => {
   // derive config from slug — validates and fails fast if unrecognized
   const config = getOneAnthropicBrainCliConfig({ slug: input.slug });
+
+  // derive anthropic auth: use explicit context if provided, otherwise default to oauth
+  const authCandidate = context.brain?.auth?.['anthropic'];
+  const authAnthropic: BrainAuthAnthropic = (() => {
+    // no auth provided — default to oauth
+    if (!authCandidate)
+      return assure({ via: { oauth: true } }, isBrainAuthAnthropic);
+
+    // caller provided auth — validate shape via type guard, fail fast if invalid
+    if (!isBrainAuthAnthropic(authCandidate))
+      throw new BadRequestError(
+        'context.brain.auth.anthropic has invalid shape',
+        { auth: context.brain?.auth },
+      );
+    return authCandidate;
+  })();
 
   // mutable handle state
   let instance: BrainCli['executor']['instance'] = null;
@@ -45,8 +69,21 @@ export const genBrainCli = async (
     null;
   let resumedFromExid: string | null = null;
 
-  // build a clean spawn env — unset CLAUDECODE to bypass nested-session guard
-  const { CLAUDECODE: _stripClaudeCode, ...spawnEnv } = process.env;
+  // build spawn env from derived auth — strip ambient keys to prevent leaks
+  const spawnEnv = (() => {
+    const {
+      CLAUDECODE: _stripClaudeCode,
+      ANTHROPIC_API_KEY: _stripKey,
+      ...baseEnv
+    } = process.env;
+
+    // api key mode
+    if (authAnthropic.via.apiKey)
+      return { ...baseEnv, ANTHROPIC_API_KEY: authAnthropic.via.apiKey };
+
+    // oauth mode — clean env, claude CLI handles its own oauth
+    return baseEnv;
+  })();
 
   // lookup pinned CLI entry point — fail fast if not installed
   const claudeCliPath = getOneClaudeCliPath();

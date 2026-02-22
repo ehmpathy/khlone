@@ -1,25 +1,38 @@
+import { UnexpectedCodePathError } from 'helpful-errors';
 import { genTempDir, given, then, useThen, when } from 'test-fns';
 
-import { genBrainCli } from '../../rhachet/genBrainCli';
+import { genBrainCli } from '../rhachet/genBrainCli';
+import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = genTempDir({ slug: 'braincli-sameboot' });
+const CWD = genTempDir({ slug: 'braincli-reboot' });
+const CONTEXT = {
+  cwd: CWD,
+  ...genContextBrainAuthAnthropic({
+    via: {
+      apiKey:
+        process.env.ANTHROPIC_API_KEY ??
+        UnexpectedCodePathError.throw(
+          'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
+        ),
+    },
+  }),
+};
 
-describe('genBrainCli.dispatch.sequential.sameboot', () => {
-  given('[case1] two asks on the same boot (no reboot)', () => {
-    when('[t0] two asks are dispatched on the same process', () => {
+describe('genBrainCli.dispatch.sequential.reboot', () => {
+  given('[case1] sequential asks across reboots (with --resume)', () => {
+    when('[t0] two asks are dispatched', () => {
       const result = useThen('both asks succeed', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, { cwd: CWD });
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
 
-        // boot once
+        // boot and first ask
         await brain.executor.boot({ mode: 'dispatch' });
-
-        // first ask
         const outputFirst = await brain.ask({
           prompt: 'respond with just the word ok',
         });
 
-        // second ask on the same boot — no reboot
+        // reboot and second ask (process may exit after each dispatch completion)
+        await brain.executor.boot({ mode: 'dispatch' });
         const outputSecond = await brain.ask({
           prompt: 'respond with just the word yes',
         });
@@ -43,22 +56,23 @@ describe('genBrainCli.dispatch.sequential.sameboot', () => {
       then('second BrainOutput has non-empty output text', () => {
         expect(result.outputSecond.output).toBeDefined();
         expect(result.outputSecond.output.length).toBeGreaterThan(0);
+        // note: token counts may be 0 on --resume (CLI does not report them on resumed sessions)
       });
 
       then('each BrainOutput has independent output', () => {
+        // both should have non-empty output text — proves independent results
         expect(result.outputFirst.output.length).toBeGreaterThan(0);
         expect(result.outputSecond.output.length).toBeGreaterThan(0);
 
-        // metrics are independent (not cumulative)
+        // metrics are independent (not cumulative) — both have their own size.chars
         expect(result.outputFirst.metrics.size.chars.output).toBeGreaterThan(0);
         expect(result.outputSecond.metrics.size.chars.output).toBeGreaterThan(
           0,
         );
       });
 
-      // peer: genBrainCli.dispatch.withCompaction proves compaction splits into 2 episodes despite same session
       then(
-        'series has exactly 1 episode — without compaction, both asks share the same context window',
+        'series has exactly 1 episode (same context window via --resume)',
         () => {
           expect(result.seriesAfter).not.toBeNull();
           expect(result.seriesAfter!.episodes.length).toEqual(1);

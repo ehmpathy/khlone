@@ -1,19 +1,33 @@
 import { existsSync } from 'fs';
+import { UnexpectedCodePathError } from 'helpful-errors';
 import { join } from 'path';
 import { genTempDir, given, then, useThen, when } from 'test-fns';
 
-import { genBrainCli } from '../../rhachet/genBrainCli';
+import { genBrainCli } from '../rhachet/genBrainCli';
+import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
 
 // use a temp dir as cwd — avoids repo hooks and provides a clean writable directory
 const CWD = genTempDir({ slug: 'braincli-act' });
+const CONTEXT = {
+  cwd: CWD,
+  ...genContextBrainAuthAnthropic({
+    via: {
+      apiKey:
+        process.env.ANTHROPIC_API_KEY ??
+        UnexpectedCodePathError.throw(
+          'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
+        ),
+    },
+  }),
+};
 
 describe('genBrainCli.dispatch.act', () => {
   given('[case1] act on a booted dispatch handle', () => {
     when('[t0] act is called with a cheap prompt', () => {
       const result = useThen('act succeeds', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, { cwd: CWD });
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
 
         // boot dispatch mode
         await brain.executor.boot({ mode: 'dispatch' });
@@ -59,7 +73,7 @@ describe('genBrainCli.dispatch.act', () => {
     () => {
       when('[t0] act is asked to write a file', () => {
         const result = useThen('act writes the file', async () => {
-          const brain = await genBrainCli({ slug: SLUG_HAIKU }, { cwd: CWD });
+          const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
 
           // boot dispatch mode
           await brain.executor.boot({ mode: 'dispatch' });
@@ -92,7 +106,7 @@ describe('genBrainCli.dispatch.act', () => {
         const result = useThen(
           'ask cannot write the file (tools restricted)',
           async () => {
-            const brain = await genBrainCli({ slug: SLUG_HAIKU }, { cwd: CWD });
+            const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
 
             // boot dispatch mode
             await brain.executor.boot({ mode: 'dispatch' });

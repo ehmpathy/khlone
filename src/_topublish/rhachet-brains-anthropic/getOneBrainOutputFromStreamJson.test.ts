@@ -3,8 +3,8 @@ import { BrainEpisode, BrainExchange, BrainSeries } from 'rhachet';
 import { Readable } from 'stream';
 import { getError, given, then, useThen, when } from 'test-fns';
 
-import { getOneAnthropicBrainCliConfig } from '../BrainCli.config';
-import { getOneBrainOutputFromStreamJson } from '../getOneBrainOutputFromStreamJson';
+import { getOneAnthropicBrainCliConfig } from './BrainCli.config';
+import { getOneBrainOutputFromStreamJson } from './getOneBrainOutputFromStreamJson';
 
 const spec = getOneAnthropicBrainCliConfig({
   slug: 'claude@anthropic/claude/opus/v4.5',

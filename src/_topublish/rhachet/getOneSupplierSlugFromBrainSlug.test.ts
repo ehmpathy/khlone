@@ -1,7 +1,7 @@
 import { BadRequestError } from 'helpful-errors';
 import { getError, given, then, when } from 'test-fns';
 
-import { getOneSupplierSlugFromBrainSlug } from '../getOneSupplierSlugFromBrainSlug';
+import { getOneSupplierSlugFromBrainSlug } from './getOneSupplierSlugFromBrainSlug';
 
 const TEST_CASES = [
   {

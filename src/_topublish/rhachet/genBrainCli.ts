@@ -1,15 +1,18 @@
 import { BadRequestError } from 'helpful-errors';
 
 import type { BrainCli } from './BrainCli';
+import type { ContextBrainAuth } from './ContextBrainAuth';
 import { getOneSupplierSlugFromBrainSlug } from './getOneSupplierSlugFromBrainSlug';
 
 /**
  * .what = route a brain slug to the correct supplier and return a BrainCli handle
  * .why = dependency inversion — khlone never touches vendor CLI args
  */
-export const genBrainCli = async (
+export const genBrainCli = async <
+  TBrainAuthSupply extends Record<string, any> = Record<string, unknown>,
+>(
   input: { slug: string },
-  context: { cwd: string },
+  context: { cwd: string } & ContextBrainAuth<TBrainAuthSupply>,
 ): Promise<BrainCli> => {
   // extract supplier prefix from slug
   const supplierSlug = getOneSupplierSlugFromBrainSlug({
