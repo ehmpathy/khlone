@@ -49,6 +49,7 @@ export const getOneBrainOutputFromStreamJson = (input: {
   stdout: Readable;
   spec: BrainSpec;
   seriesPrior: BrainSeries | null;
+  resumedFromExid: string | null;
 }): Promise<BrainOutput<string>> => {
   return new Promise<BrainOutput<string>>((onResolve, onReject) => {
     // accumulate parsed state
@@ -311,11 +312,19 @@ export const getOneBrainOutputFromStreamJson = (input: {
       // decide whether this exchange belongs to the latest episode or starts a new one
       const episodesPrior = input.seriesPrior?.episodes ?? [];
       const episodeLatest = episodesPrior[episodesPrior.length - 1] ?? null;
-      const isSameContextWindow =
-        !compactionDetected &&
+      // same context window if: session matches AND (no compaction OR compaction is expected from resume)
+      const isSessionMatch =
         episodeLatest != null &&
         sessionId != null &&
         episodeLatest.exid === sessionId;
+      const isResumedSession =
+        episodeLatest != null &&
+        input.resumedFromExid != null &&
+        (episodeLatest.exid === input.resumedFromExid ||
+          episodeLatest.exid?.startsWith(`${input.resumedFromExid}/`));
+      const isSameContextWindow =
+        (isSessionMatch || isResumedSession) &&
+        (!compactionDetected || isResumedSession);
 
       // derive episode exid — suffix with index when compaction splits a session into multiple episodes
       const isCompactionSplit =
@@ -328,6 +337,20 @@ export const getOneBrainOutputFromStreamJson = (input: {
       const episodeExid = isCompactionSplit
         ? `${sessionId}/${episodesPrior.length}`
         : sessionId;
+
+      // retroactively suffix prior episodes when compaction splits a session (e.g., sess-abc → sess-abc/0)
+      const episodesPriorSuffixed = isCompactionSplit
+        ? episodesPrior.map((ep, idx) => {
+            if (ep.exid === sessionId) {
+              return new BrainEpisode({
+                hash: ep.hash,
+                exid: `${sessionId}/${idx}`,
+                exchanges: ep.exchanges,
+              });
+            }
+            return ep;
+          })
+        : episodesPrior;
 
       // construct episode — append exchange to latest if same context window, else start fresh
       const episode = isSameContextWindow
@@ -346,8 +369,8 @@ export const getOneBrainOutputFromStreamJson = (input: {
 
       // construct series — replace latest episode if same context window, else append new one
       const episodesForSeries = isSameContextWindow
-        ? [...episodesPrior.slice(0, -1), episode]
-        : [...episodesPrior, episode];
+        ? [...episodesPriorSuffixed.slice(0, -1), episode]
+        : [...episodesPriorSuffixed, episode];
 
       const series = new BrainSeries({
         hash: sha256(sessionId ?? 'ephemeral'),

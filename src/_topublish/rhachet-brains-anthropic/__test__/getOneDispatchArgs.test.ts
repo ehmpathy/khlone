@@ -1,14 +1,12 @@
 import { BrainEpisode, BrainExchange, BrainSeries } from 'rhachet';
 import { given, then, when } from 'test-fns';
 
-import {
-  type AnthropicBrainCliConfig,
-  CONFIG_BY_CLI_SLUG,
-} from '../BrainCli.config';
+import { getOneAnthropicBrainCliConfig } from '../BrainCli.config';
 import { getOneDispatchArgs } from '../getOneDispatchArgs';
 
-const config: AnthropicBrainCliConfig =
-  CONFIG_BY_CLI_SLUG['claude@anthropic/claude/opus/v4.5'];
+const config = getOneAnthropicBrainCliConfig({
+  slug: 'claude@anthropic/claude/opus/v4.5',
+});
 
 describe('getOneDispatchArgs', () => {
   given('ask mode with no prior series', () => {

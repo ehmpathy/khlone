@@ -38,6 +38,7 @@
     "upgrade:rhachet": "rhachet upgrade"
   },
   "dependencies": {
+    "@anthropic-ai/claude-code": "2.1.50",
     "domain-objects": "0.31.9",
     "helpful-errors": "1.5.3",
     "iso-price": "1.2.0",

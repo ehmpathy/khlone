@@ -1,16 +1,29 @@
 import { type ChildProcess, spawn } from 'child_process';
-import { BadRequestError, UnexpectedCodePathError } from 'helpful-errors';
+import { UnexpectedCodePathError } from 'helpful-errors';
 import type { BrainSeries } from 'rhachet';
 
 import type { BrainCli } from '../rhachet/BrainCli';
-import {
-  type AnthropicBrainCliConfig,
-  type AnthropicBrainCliSlug,
-  CONFIG_BY_CLI_SLUG,
-} from './BrainCli.config';
+import { getOneAnthropicBrainCliConfig } from './BrainCli.config';
 import { getOneBrainOutputFromStreamJson } from './getOneBrainOutputFromStreamJson';
 import { getOneDispatchArgs } from './getOneDispatchArgs';
 import { getOneInteractArgs } from './getOneInteractArgs';
+
+/**
+ * .what = lookup the CLI entry point from the installed @anthropic-ai/claude-code package
+ * .why = guarantees the pinned prod dep binary is used — never falls back to system PATH
+ *
+ * .note = require.resolve is a node builtin for module lookup — not the forbidden "resolve" verb
+ */
+const getOneClaudeCliPath = (): string => {
+  try {
+    return require.resolve('@anthropic-ai/claude-code/cli.js');
+  } catch (error) {
+    throw new UnexpectedCodePathError(
+      '@anthropic-ai/claude-code is not installed. this is a prod dependency of rhachet-brains-anthropic',
+      { error: error instanceof Error ? error.message : String(error) },
+    );
+  }
+};
 
 /**
  * .what = construct a BrainCli handle for a claude code CLI process
@@ -20,14 +33,8 @@ export const genBrainCli = async (
   input: { slug: string },
   context: { cwd: string },
 ): Promise<BrainCli> => {
-  // validate slug against known configs
-  const config: AnthropicBrainCliConfig | undefined =
-    CONFIG_BY_CLI_SLUG[input.slug as AnthropicBrainCliSlug];
-  if (!config)
-    BadRequestError.throw('unrecognized anthropic brain CLI slug', {
-      slug: input.slug,
-      valid: Object.keys(CONFIG_BY_CLI_SLUG),
-    });
+  // derive config from slug — validates and fails fast if unrecognized
+  const config = getOneAnthropicBrainCliConfig({ slug: input.slug });
 
   // mutable handle state
   let instance: BrainCli['executor']['instance'] = null;
@@ -36,6 +43,13 @@ export const genBrainCli = async (
   let childProcess: ChildProcess | null = null;
   let ptyProcess: ReturnType<typeof import('@lydell/node-pty').spawn> | null =
     null;
+  let resumedFromExid: string | null = null;
+
+  // build a clean spawn env — unset CLAUDECODE to bypass nested-session guard
+  const { CLAUDECODE: _stripClaudeCode, ...spawnEnv } = process.env;
+
+  // lookup pinned CLI entry point — fail fast if not installed
+  const claudeCliPath = getOneClaudeCliPath();
 
   // event callback registries — persist across process reboots
   const dataListeners: Array<(chunk: string) => void> = [];
@@ -145,13 +159,17 @@ export const genBrainCli = async (
       });
       childProcess.stdin.write(message + '\n');
 
-      // collect BrainOutput from stream
+      // collect BrainOutput from stream — pass resumedFromExid only on first call after resume-boot
       const brainOutput = await getOneBrainOutputFromStreamJson({
         prompt: askInput.prompt,
         stdout: childProcess.stdout!,
         spec: config.spec,
         seriesPrior: series,
+        resumedFromExid,
       });
+
+      // clear resume flag after first call — subsequent calls on same boot are not "resumed"
+      resumedFromExid = null;
 
       // update series
       series = brainOutput.series;
@@ -190,13 +208,17 @@ export const genBrainCli = async (
       });
       childProcess.stdin.write(message + '\n');
 
-      // collect BrainOutput from stream
+      // collect BrainOutput from stream — pass resumedFromExid only on first call after resume-boot
       const brainOutput = await getOneBrainOutputFromStreamJson({
         prompt: actInput.prompt,
         stdout: childProcess.stdout!,
         spec: config.spec,
         seriesPrior: series,
+        resumedFromExid,
       });
+
+      // clear resume flag after first call — subsequent calls on same boot are not "resumed"
+      resumedFromExid = null;
 
       // update series
       series = brainOutput.series;
@@ -228,6 +250,13 @@ export const genBrainCli = async (
         // kill extant process if alive
         killCurrentProcess();
 
+        // detach old process refs so their async exit handlers won't clobber new state
+        childProcess = null;
+        ptyProcess = null;
+
+        // track whether this boot uses --resume (first call after resume-boot tolerates compaction)
+        resumedFromExid = series?.exid ?? null;
+
         if (bootInput.mode === 'dispatch') {
           // compute args for dispatch mode — default to ask tools if no prior task mode
           const taskMode = lastTaskMode ?? 'ask';
@@ -238,10 +267,10 @@ export const genBrainCli = async (
             series,
           });
 
-          // spawn via child_process with pipe stdio
-          childProcess = spawn(config.binary, args, {
+          // spawn via child_process with pipe stdio — uses pinned cli.js via node
+          childProcess = spawn(process.execPath, [claudeCliPath, ...args], {
             cwd: context.cwd,
-            env: { ...process.env },
+            env: spawnEnv,
             stdio: ['pipe', 'pipe', 'pipe'],
           });
 
@@ -260,15 +289,19 @@ export const genBrainCli = async (
           // compute args for interact mode
           const args = getOneInteractArgs({ config, series });
 
-          // spawn via @lydell/node-pty for raw PTY
+          // spawn via @lydell/node-pty for raw PTY — uses pinned cli.js via node
           const nodePty = await import('@lydell/node-pty');
-          ptyProcess = nodePty.spawn(config.binary, args, {
-            name: 'xterm-256color',
-            cols: 120,
-            rows: 40,
-            cwd: context.cwd,
-            env: { ...process.env } as Record<string, string>,
-          });
+          ptyProcess = nodePty.spawn(
+            process.execPath,
+            [claudeCliPath, ...args],
+            {
+              name: 'xterm-256color',
+              cols: 120,
+              rows: 40,
+              cwd: context.cwd,
+              env: spawnEnv as Record<string, string>,
+            },
+          );
 
           // update instance state
           instance = {

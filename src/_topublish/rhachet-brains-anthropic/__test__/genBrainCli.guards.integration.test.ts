@@ -1,10 +1,10 @@
 import { BadRequestError } from 'helpful-errors';
-import { getError, given, then, when } from 'test-fns';
+import { genTempDir, getError, given, then, when } from 'test-fns';
 
 import { genBrainCli } from '../../rhachet/genBrainCli';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = process.cwd();
+const CWD = genTempDir({ slug: 'braincli-guards' });
 
 describe('genBrainCli.guards', () => {
   given('[case1] an invalid brain slug', () => {

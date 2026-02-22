@@ -1,9 +1,9 @@
-import { given, then, useThen, when } from 'test-fns';
+import { genTempDir, given, then, useThen, when } from 'test-fns';
 
 import { genBrainCli } from '../../rhachet/genBrainCli';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = process.cwd();
+const CWD = genTempDir({ slug: 'braincli-ask' });
 
 describe('genBrainCli.dispatch.ask', () => {
   given('[case1] a valid haiku brain slug', () => {

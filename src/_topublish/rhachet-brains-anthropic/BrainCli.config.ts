@@ -1,3 +1,4 @@
+import { BadRequestError } from 'helpful-errors';
 import type { BrainSpec } from 'rhachet';
 import {
   type AnthropicBrainAtomSlug,
@@ -22,11 +23,10 @@ export type AnthropicBrainCliSlug =
 
 /**
  * .what = config shape for a brain CLI supplier
- * .why = maps a slug to the binary, spec, and tool sets needed for spawn
+ * .why = maps a slug to the model, spec, and tool sets needed for spawn
  */
 export interface AnthropicBrainCliConfig {
   slug: AnthropicBrainCliSlug;
-  binary: string;
   model: string;
   spec: BrainSpec;
   tools: {
@@ -63,16 +63,34 @@ const getOneAtomSlug = (input: {
 
 /**
  * .what = build a BrainCli config from a CLI slug
- * .why = reuse BrainSpec from the atom config — single source of truth for model specs
+ * .why = explicit config derivation — called directly, no hidden map
  */
-const getOneConfig = (input: {
-  cliSlug: AnthropicBrainCliSlug;
+export const getOneAnthropicBrainCliConfig = (input: {
+  slug: string;
 }): AnthropicBrainCliConfig => {
-  const atomSlug = getOneAtomSlug({ cliSlug: input.cliSlug });
+  // validate slug format
+  const validSlugs: AnthropicBrainCliSlug[] = [
+    'claude@anthropic/claude/haiku',
+    'claude@anthropic/claude/haiku/v4.5',
+    'claude@anthropic/claude/sonnet',
+    'claude@anthropic/claude/sonnet/v4',
+    'claude@anthropic/claude/sonnet/v4.5',
+    'claude@anthropic/claude/opus',
+    'claude@anthropic/claude/opus/v4.5',
+  ];
+  if (!validSlugs.includes(input.slug as AnthropicBrainCliSlug))
+    BadRequestError.throw('unrecognized anthropic brain CLI slug', {
+      slug: input.slug,
+      valid: validSlugs,
+    });
+
+  // derive atom config from slug
+  const cliSlug = input.slug as AnthropicBrainCliSlug;
+  const atomSlug = getOneAtomSlug({ cliSlug });
   const atomConfig = CONFIG_BY_ATOM_SLUG[atomSlug];
+
   return {
-    slug: input.cliSlug,
-    binary: 'claude',
+    slug: cliSlug,
     model: atomConfig.model,
     spec: atomConfig.spec,
     tools: {
@@ -80,37 +98,4 @@ const getOneConfig = (input: {
       act: [...TOOLS_ACT],
     },
   };
-};
-
-/**
- * .what = config map from brain CLI slug to spawn config
- * .why = single source of truth for all anthropic brain CLI handles
- */
-export const CONFIG_BY_CLI_SLUG: Record<
-  AnthropicBrainCliSlug,
-  AnthropicBrainCliConfig
-> = {
-  // family aliases (latest version per family)
-  'claude@anthropic/claude/haiku': getOneConfig({
-    cliSlug: 'claude@anthropic/claude/haiku',
-  }),
-  'claude@anthropic/claude/sonnet': getOneConfig({
-    cliSlug: 'claude@anthropic/claude/sonnet',
-  }),
-  'claude@anthropic/claude/opus': getOneConfig({
-    cliSlug: 'claude@anthropic/claude/opus',
-  }),
-  // pinned versions
-  'claude@anthropic/claude/haiku/v4.5': getOneConfig({
-    cliSlug: 'claude@anthropic/claude/haiku/v4.5',
-  }),
-  'claude@anthropic/claude/sonnet/v4': getOneConfig({
-    cliSlug: 'claude@anthropic/claude/sonnet/v4',
-  }),
-  'claude@anthropic/claude/sonnet/v4.5': getOneConfig({
-    cliSlug: 'claude@anthropic/claude/sonnet/v4.5',
-  }),
-  'claude@anthropic/claude/opus/v4.5': getOneConfig({
-    cliSlug: 'claude@anthropic/claude/opus/v4.5',
-  }),
 };

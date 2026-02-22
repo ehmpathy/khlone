@@ -3,10 +3,12 @@ import { BrainEpisode, BrainExchange, BrainSeries } from 'rhachet';
 import { Readable } from 'stream';
 import { getError, given, then, useThen, when } from 'test-fns';
 
-import { CONFIG_BY_CLI_SLUG } from '../BrainCli.config';
+import { getOneAnthropicBrainCliConfig } from '../BrainCli.config';
 import { getOneBrainOutputFromStreamJson } from '../getOneBrainOutputFromStreamJson';
 
-const spec = CONFIG_BY_CLI_SLUG['claude@anthropic/claude/opus/v4.5'].spec;
+const spec = getOneAnthropicBrainCliConfig({
+  slug: 'claude@anthropic/claude/opus/v4.5',
+}).spec;
 
 /**
  * .what = create a readable stream from nd-JSON lines
@@ -53,6 +55,7 @@ describe('getOneBrainOutputFromStreamJson', () => {
           stdout: getOneStreamFromLines(lines),
           spec,
           seriesPrior: null,
+          resumedFromExid: null,
         });
       });
 
@@ -136,6 +139,7 @@ describe('getOneBrainOutputFromStreamJson', () => {
           stdout: getOneStreamFromLines(lines),
           spec,
           seriesPrior: null,
+          resumedFromExid: null,
         });
       });
 
@@ -174,6 +178,7 @@ describe('getOneBrainOutputFromStreamJson', () => {
           stdout: getOneStreamFromLines(lines),
           spec,
           seriesPrior: null,
+          resumedFromExid: null,
         });
       });
 
@@ -203,6 +208,7 @@ describe('getOneBrainOutputFromStreamJson', () => {
             stdout: stream,
             spec,
             seriesPrior: null,
+            resumedFromExid: null,
           }),
         );
         expect(error).toBeInstanceOf(UnexpectedCodePathError);
@@ -249,6 +255,7 @@ describe('getOneBrainOutputFromStreamJson', () => {
               stdout: getOneStreamFromLines(lines),
               spec,
               seriesPrior,
+              resumedFromExid: null,
             });
           },
         );
@@ -315,6 +322,7 @@ describe('getOneBrainOutputFromStreamJson', () => {
               stdout: getOneStreamFromLines(lines),
               spec,
               seriesPrior,
+              resumedFromExid: null,
             });
           },
         );
@@ -386,6 +394,7 @@ describe('getOneBrainOutputFromStreamJson', () => {
               stdout: getOneStreamFromLines(lines),
               spec,
               seriesPrior,
+              resumedFromExid: null,
             });
           },
         );
@@ -394,8 +403,8 @@ describe('getOneBrainOutputFromStreamJson', () => {
           expect(result.series!.episodes.length).toEqual(2);
         });
 
-        then('first episode is the prior one (untouched)', () => {
-          expect(result.series!.episodes[0]!.exid).toEqual('sess-same');
+        then('first episode is the prior one (retroactively suffixed)', () => {
+          expect(result.series!.episodes[0]!.exid).toEqual('sess-same/0');
           expect(result.series!.episodes[0]!.exchanges.length).toEqual(1);
         });
 

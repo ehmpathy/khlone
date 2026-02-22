@@ -1,13 +1,17 @@
-import { getError, given, then, useThen, when } from 'test-fns';
+import { genTempDir, getError, given, then, useThen, when } from 'test-fns';
 
 import { genBrainCli } from '../../rhachet/genBrainCli';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = process.cwd();
+const CWD = genTempDir({ slug: 'braincli-interact' });
 
 /**
  * .what = await until accumulated onData output matches a predicate
  * .why = replace arbitrary timers with precise promise-based waits
+ *
+ * .note = auto-accepts the workspace trust prompt if detected in PTY output.
+ *         genTempDir creates fresh dirs that claude hasn't seen before,
+ *         so the trust dialog appears on first interact-mode boot.
  */
 const awaitOutput = (input: {
   brain: Awaited<ReturnType<typeof genBrainCli>>;
@@ -16,6 +20,7 @@ const awaitOutput = (input: {
 }): Promise<string> =>
   new Promise((onDone, onFail) => {
     let accumulated = '';
+    let trustPromptHandled = false;
     const timeout = setTimeout(
       () =>
         onFail(
@@ -27,6 +32,18 @@ const awaitOutput = (input: {
     );
     input.brain.terminal.onData((chunk) => {
       accumulated += chunk;
+
+      // auto-accept workspace trust prompt — option 1 ("Yes, I trust") is pre-selected
+      // note: PTY output has ANSI escape sequences between words, so match single words
+      if (
+        !trustPromptHandled &&
+        accumulated.includes('safety') &&
+        accumulated.includes('trust')
+      ) {
+        trustPromptHandled = true;
+        input.brain.terminal.write('\r');
+      }
+
       if (input.predicate(accumulated)) {
         clearTimeout(timeout);
         onDone(accumulated);
@@ -176,7 +193,69 @@ describe('genBrainCli.interact', () => {
       });
     });
 
-    when('[t4] dispatch -> interact preserves series', () => {
+    when(
+      '[t4] dispatch -> interact proves session resume via prior context recall',
+      () => {
+        const result = useThen(
+          'brain recalls prior dispatch context in interact mode',
+          async () => {
+            const brain = await genBrainCli({ slug: SLUG_HAIKU }, { cwd: CWD });
+
+            // boot dispatch and tell the brain a unique word
+            await brain.executor.boot({ mode: 'dispatch' });
+            await brain.ask({
+              prompt:
+                'remember this secret code word: flamingo. just say ok to confirm.',
+            });
+
+            // switch to interact mode (resumes the same session)
+            await brain.executor.boot({ mode: 'interact' });
+
+            // register the response listener BEFORE the TUI settles — captures all data from boot
+            const recallPromise = awaitOutput({
+              brain,
+              predicate: (acc) => acc.toLowerCase().includes('flamingo'),
+              timeoutMs: 90_000,
+            });
+
+            // await the CLI TUI to fully render
+            await awaitOutput({
+              brain,
+              predicate: (acc) => acc.includes('shortcuts'),
+              timeoutMs: 30_000,
+            });
+
+            // guard: verify process survived the TUI boot
+            if (!brain.executor.instance)
+              throw new Error(
+                'interact process exited before prompt could be sent',
+              );
+
+            // let the TUI settle
+            await new Promise((r) => setTimeout(r, 2_000));
+
+            // ask the brain to recall the word from the prior dispatch context
+            brain.terminal.write(
+              'what was the secret code word I told you earlier? respond with just that one word\r',
+            );
+
+            // await the response
+            const recallOutput = await recallPromise;
+
+            // cleanup
+            brain.executor.kill();
+
+            return { recallOutput };
+          },
+        );
+
+        then('brain recalls the word from prior dispatch context', () => {
+          expect(result.recallOutput.toLowerCase()).toContain('flamingo');
+        });
+      },
+    );
+
+    when('[t5] dispatch -> interact preserves series', () => {
       const result = useThen('mode switch preserves series', async () => {
         const brain = await genBrainCli({ slug: SLUG_HAIKU }, { cwd: CWD });
 

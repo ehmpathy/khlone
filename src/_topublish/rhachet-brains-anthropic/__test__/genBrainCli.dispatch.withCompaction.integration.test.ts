@@ -1,9 +1,11 @@
-import { given, then, useThen, when } from 'test-fns';
+import { genTempDir, given, then, useThen, when } from 'test-fns';
 
 import { genBrainCli } from '../../rhachet/genBrainCli';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = process.cwd();
+
+// use a temp dir as cwd — avoids repo hooks that inject massive context and cause infinite compaction loops
+const CWD = genTempDir({ slug: 'braincli-compact' });
 
 // compaction adds an extra summarization API call — allow generous timeout
 jest.setTimeout(300_000);
@@ -102,11 +104,16 @@ describe('genBrainCli.dispatch.withCompaction', () => {
         });
 
         then(
-          'second episode exid is suffixed to distinguish from pre-compaction episode',
+          'both episode exids are suffixed to distinguish compaction-split episodes',
           () => {
             const first = result.seriesAfter!.episodes[0]!;
             const second = result.seriesAfter!.episodes[1]!;
-            expect(second.exid).toEqual(`${first.exid}/1`);
+            // both share the same session — suffixed with /0 and /1
+            expect(first.exid).toMatch(/\/0$/);
+            expect(second.exid).toMatch(/\/1$/);
+            // same session prefix
+            const sessionPrefix = first.exid!.replace(/\/0$/, '');
+            expect(second.exid).toEqual(`${sessionPrefix}/1`);
           },
         );
       });

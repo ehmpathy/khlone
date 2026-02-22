@@ -1,9 +1,9 @@
-import { given, then, useThen, when } from 'test-fns';
+import { genTempDir, given, then, useThen, when } from 'test-fns';
 
 import { genBrainCli } from '../../rhachet/genBrainCli';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = process.cwd();
+const CWD = genTempDir({ slug: 'braincli-sameboot' });
 
 describe('genBrainCli.dispatch.sequential.sameboot', () => {
   given('[case1] two asks on the same boot (no reboot)', () => {
