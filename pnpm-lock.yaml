@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@anthropic-ai/claude-code':
+        specifier: 2.1.50
+        version: 2.1.50
       domain-objects:
         specifier: 0.31.9
         version: 0.31.9
@@ -27,6 +30,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: 19.5.0
         version: 19.5.0
+      '@lydell/node-pty':
+        specifier: 1.1.0
+        version: 1.1.0
       '@swc/core':
         specifier: 1.15.3
         version: 1.15.3
@@ -53,13 +59,13 @@ importers:
         version: 0.13.15
       declapract-typescript-ehmpathy:
         specifier: 0.47.43
-        version: 0.47.43(declapract@0.13.15)(zod@4.3.4)
+        version: 0.47.43(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(declapract@0.13.15)(zod@4.3.4)
       declastruct:
         specifier: 1.7.3
         version: 1.7.3(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(domain-objects@0.31.9)(zod@4.3.4)
       declastruct-github:
         specifier: 1.3.0
-        version: 1.3.0(zod@4.3.4)
+        version: 1.3.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       depcheck:
         specifier: 1.4.3
         version: 1.4.3
@@ -73,26 +79,23 @@ importers:
         specifier: 30.2.0
         version: 30.2.0(@types/node@22.15.21)(esbuild-register@3.6.0(esbuild@0.25.12))
       rhachet:
-        specifier: 1.34.0
-        version: 1.34.0(zod@4.3.4)
+        specifier: 1.35.3
+        version: 1.35.3(zod@4.3.4)
       rhachet-brains-anthropic:
         specifier: 0.3.3
-        version: 0.3.3(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.34.0(zod@4.3.4))
-      rhachet-brains-xai:
-        specifier: 0.2.1
-        version: 0.2.1(@types/node@22.15.21)(rhachet@1.34.0(zod@4.3.4))
+        version: 0.3.3(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.35.3(zod@4.3.4))
       rhachet-roles-bhrain:
-        specifier: 0.11.2
-        version: 0.11.2(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)
+        specifier: 0.12.5
+        version: 0.12.5(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)
       rhachet-roles-bhuild:
-        specifier: 0.7.0
-        version: 0.7.0
+        specifier: 0.10.0
+        version: 0.10.0
       rhachet-roles-ehmpathy:
-        specifier: 1.26.0
-        version: 1.26.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.34.0(zod@4.3.4))
+        specifier: 1.26.5
+        version: 1.26.5(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.35.3(zod@4.3.4))
       test-fns:
-        specifier: 1.7.2
-        version: 1.7.2
+        specifier: 1.15.4
+        version: 1.15.4
       tsc-alias:
         specifier: 1.8.10
         version: 1.8.10
@@ -113,6 +116,11 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       zod: ^3.24.1 || ^4.0.0
+
+  '@anthropic-ai/claude-code@2.1.50':
+    resolution: {integrity: sha512-urrhY4IRuLHFoEYb6pjRy6sbDE8TH886zwRvIAPS4Tz51MeGVomZet4EajqxX6+IOKbJNbf4IHL3fTzI0vcKXA==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   '@anthropic-ai/sdk@0.51.0':
     resolution: {integrity: sha512-fAFC/uHhyzfw7rs65EPVV+scXDytGNm5BjttxHf6rP/YGvaBRKEvp2lwyuMigTwMI95neeG4bzrZigz7KCikjw==}
@@ -1322,6 +1330,39 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@lydell/node-pty-darwin-arm64@1.1.0':
+    resolution: {integrity: sha512-7kFD+owAA61qmhJCtoMbqj3Uvff3YHDiU+4on5F2vQdcMI3MuwGi7dM6MkFG/yuzpw8LF2xULpL71tOPUfxs0w==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@lydell/node-pty-darwin-x64@1.1.0':
+    resolution: {integrity: sha512-XZdvqj5FjAMjH8bdp0YfaZjur5DrCIDD1VYiE9EkkYVMDQqRUPHYV3U8BVEQVT9hYfjmpr7dNaELF2KyISWSNA==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@lydell/node-pty-linux-arm64@1.1.0':
+    resolution: {integrity: sha512-yyDBmalCfHpLiQMT2zyLcqL2Fay4Xy7rIs8GH4dqKLnEviMvPGOK7LADVkKAsbsyXBSISL3Lt1m1MtxhPH6ckg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@lydell/node-pty-linux-x64@1.1.0':
+    resolution: {integrity: sha512-NcNqRTD14QT+vXcEuqSSvmWY+0+WUBn2uRE8EN0zKtDpIEr9d+YiFj16Uqds6QfcLCHfZmC+Ls7YzwTaqDnanA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@lydell/node-pty-win32-arm64@1.1.0':
+    resolution: {integrity: sha512-JOMbCou+0fA7d/m97faIIfIU0jOv8sn2OR7tI45u3AmldKoKoLP8zHY6SAvDDnI3fccO1R2HeR1doVjpS7HM0w==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@lydell/node-pty-win32-x64@1.1.0':
+    resolution: {integrity: sha512-3N56BZ+WDFnUMYRtsrr7Ky2mhWGl9xXcyqR6cexfuCqcz9RNWL+KoXRv/nZylY5dYaXkft4JaR1uVu+roiZDAw==}
+    cpu: [x64]
+    os: [win32]
+
+  '@lydell/node-pty@1.1.0':
+    resolution: {integrity: sha512-VDD8LtlMTOrPKWMXUAcB9+LTktzuunqrMwkYR1DMRBkS6LQrCt+0/Ws1o2rMml/n3guePpS7cxhHF7Nm5K4iMw==}
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -4034,24 +4075,24 @@ packages:
     peerDependencies:
       rhachet: '>=1.21.4'
 
-  rhachet-roles-bhrain@0.11.2:
-    resolution: {integrity: sha512-xltvF6FPKGcIjTRj+428zQQx2TyusEGTbGGJEFitlFSot3sqDgAPEKm/oj8yYyluiW5ubNVSsavrhGoCgYAHQQ==}
+  rhachet-roles-bhrain@0.12.5:
+    resolution: {integrity: sha512-0wq+Qr2rgenpOuuhivPTIFwHD6V7yDSwr0AU0gBZtVFi/roWUf7aTx+S2zg8U0QEvrYcovRW+1Ab6Bx6ec2oRg==}
     engines: {node: '>=8.0.0'}
 
   rhachet-roles-bhrain@0.7.5:
     resolution: {integrity: sha512-O2zRlITFHmpTHbS3E5PUODlqAWWVt+xV44uu3P3RSLygcgFrG8q9NekLMJTMBsnL2ug4S8mNU7Ji7wCwjkX7qg==}
     engines: {node: '>=8.0.0'}
 
-  rhachet-roles-bhuild@0.7.0:
-    resolution: {integrity: sha512-OsiuFlTn1ZAqr/FqGcVvPemjk70jS6NHwxDUYbcip0ExkItf+WCjePtAjhQkR0P7h4AAIrxnPRKRW3s/1+CaAQ==}
+  rhachet-roles-bhuild@0.10.0:
+    resolution: {integrity: sha512-MMR+ux24hb1BxXNq4zE+ySrjh3H1AqnoUgs51y6oqCx/hQK519FE+LYnYc07H00I5UUTGt7zxhr3HL2DEY2g1g==}
     engines: {node: '>=18.0.0'}
 
-  rhachet-roles-ehmpathy@1.26.0:
-    resolution: {integrity: sha512-JCKPnfXH7kNw0dUdjx0aMgP6hcnUFEgrsE2sSUSOv4mVbLRKpFJ6hR+L/p8fkDE29kKpcVbZ1IKJrsjASYRAzw==}
+  rhachet-roles-ehmpathy@1.26.5:
+    resolution: {integrity: sha512-BvYsSBV5EHhSZ8K6LW6pWWG0ds53wSvTDGJmsGtkUDkbTQ81HgVB6ZHoA4qf4//+Vj5qK3anqUpnGEPyDYsqrA==}
     engines: {node: '>=8.0.0'}
 
-  rhachet@1.34.0:
-    resolution: {integrity: sha512-3GfHcFECSSMOIOw9dhPFKwoMSn6OFnt8cHyU3w/2/+25AujJVG9mSuffGwGMfv3fE1YZ8Br4ILGVUjnVYpfy/w==}
+  rhachet@1.35.3:
+    resolution: {integrity: sha512-vwK0ZjwL+T9zIVWYsnjR4RETURPE2OSCMLhDdsAuHe74+ZNEUD1kAgIQkgLcmG1lPiTvcXDjZH74iSb/ynUSjQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
     peerDependencies:
@@ -4273,6 +4314,10 @@ packages:
 
   test-fns@1.15.0:
     resolution: {integrity: sha512-zC/qUA2lwfiXoQ00Ws8yD8LPA7p3n2a+Dl7wmI4iTXz4HbrU52riPY+AceGWgCAINs/cJ7cs9jnnASSPBwyGpg==}
+    engines: {node: '>=8.0.0'}
+
+  test-fns@1.15.4:
+    resolution: {integrity: sha512-X/38h4K756lVMW1/651XNnXEQPNmPq7pPTxLxXmx7lOQiaDZR8uY/zOkclhSPFGyTA/MeqQYaUuKqcvTX4PP7Q==}
     engines: {node: '>=8.0.0'}
 
   test-fns@1.4.2:
@@ -4595,6 +4640,18 @@ snapshots:
       '@img/sharp-linuxmusl-arm64': 0.33.5
       '@img/sharp-linuxmusl-x64': 0.33.5
       '@img/sharp-win32-x64': 0.33.5
+
+  '@anthropic-ai/claude-code@2.1.50':
+    optionalDependencies:
+      '@img/sharp-darwin-arm64': 0.34.5
+      '@img/sharp-darwin-x64': 0.34.5
+      '@img/sharp-linux-arm': 0.34.5
+      '@img/sharp-linux-arm64': 0.34.5
+      '@img/sharp-linux-x64': 0.34.5
+      '@img/sharp-linuxmusl-arm64': 0.34.5
+      '@img/sharp-linuxmusl-x64': 0.34.5
+      '@img/sharp-win32-arm64': 0.34.5
+      '@img/sharp-win32-x64': 0.34.5
 
   '@anthropic-ai/sdk@0.51.0': {}
 
@@ -6176,6 +6233,33 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@lydell/node-pty-darwin-arm64@1.1.0':
+    optional: true
+
+  '@lydell/node-pty-darwin-x64@1.1.0':
+    optional: true
+
+  '@lydell/node-pty-linux-arm64@1.1.0':
+    optional: true
+
+  '@lydell/node-pty-linux-x64@1.1.0':
+    optional: true
+
+  '@lydell/node-pty-win32-arm64@1.1.0':
+    optional: true
+
+  '@lydell/node-pty-win32-x64@1.1.0':
+    optional: true
+
+  '@lydell/node-pty@1.1.0':
+    optionalDependencies:
+      '@lydell/node-pty-darwin-arm64': 1.1.0
+      '@lydell/node-pty-darwin-x64': 1.1.0
+      '@lydell/node-pty-linux-arm64': 1.1.0
+      '@lydell/node-pty-linux-x64': 1.1.0
+      '@lydell/node-pty-win32-arm64': 1.1.0
+      '@lydell/node-pty-win32-x64': 1.1.0
+
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
       '@emnapi/core': 1.8.1
@@ -7555,16 +7639,21 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
-  declapract-typescript-ehmpathy@0.47.43(declapract@0.13.15)(zod@4.3.4):
+  declapract-typescript-ehmpathy@0.47.43(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(declapract@0.13.15)(zod@4.3.4):
     dependencies:
       declapract: 0.13.15
       domain-objects: 0.31.9
       expect: 29.4.2
       flat: 5.0.2
       helpful-errors: 1.5.3
-      test-fns: 1.15.0(zod@4.3.4)
+      test-fns: 1.15.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       yaml: 2.8.2
     transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - '@tensorflow/tfjs'
+      - '@types/node'
+      - aws-crt
+      - ws
       - zod
 
   declapract@0.13.15:
@@ -7590,7 +7679,7 @@ snapshots:
       uuid: 9.0.0
       yaml: 1.6.0
 
-  declastruct-github@1.3.0(zod@4.3.4):
+  declastruct-github@1.3.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4):
     dependencies:
       '@ehmpathy/uni-time': 1.7.4
       '@octokit/rest': 21.1.1
@@ -7598,12 +7687,16 @@ snapshots:
       domain-objects: 0.31.7(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       helpful-errors: 1.5.3
       libsodium-wrappers: 0.7.16
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       type-fns: 1.21.0
       visualogic: 1.3.2
-      with-simple-cache: 0.15.1(zod@4.3.4)
+      with-simple-cache: 0.15.1(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
     transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - '@tensorflow/tfjs'
+      - '@types/node'
       - aws-crt
+      - ws
       - zod
 
   declastruct@1.7.3(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(domain-objects@0.31.9)(zod@4.3.4):
@@ -7615,7 +7708,7 @@ snapshots:
       helpful-errors: 1.5.3
       jest-diff: 30.0.2
       rhachet-artifact-git: 1.1.3(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
-      simple-log-methods: 0.6.2(zod@4.3.4)
+      simple-log-methods: 0.6.2(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       tsx: 4.20.6
       type-fns: 1.21.0
       uuid-fns: 1.0.2
@@ -7734,8 +7827,8 @@ snapshots:
       domain-objects: 0.31.3
       helpful-errors: 1.5.3
       joi: 17.4.0
-      rhachet: 1.34.0(zod@4.3.4)
-      rhachet-roles-ehmpathy: 1.26.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.34.0(zod@4.3.4))
+      rhachet: 1.35.3(zod@4.3.4)
+      rhachet-roles-ehmpathy: 1.26.5(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.35.3(zod@4.3.4))
       type-fns: 1.21.0
       uuid-fns: 1.1.3
     transitivePeerDependencies:
@@ -9344,7 +9437,7 @@ snapshots:
       domain-objects: 0.31.9
       helpful-errors: 1.5.3
 
-  rhachet-brains-anthropic@0.3.3(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.34.0(zod@4.3.4)):
+  rhachet-brains-anthropic@0.3.3(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.35.3(zod@4.3.4)):
     dependencies:
       '@anthropic-ai/claude-agent-sdk': 0.1.76(zod@4.3.4)
       '@anthropic-ai/sdk': 0.71.2(zod@4.3.4)
@@ -9352,7 +9445,7 @@ snapshots:
       helpful-errors: 1.5.3
       iso-price: 1.1.1(domain-objects@0.31.9)
       iso-time: 1.11.1
-      rhachet: 1.34.0(zod@4.3.4)
+      rhachet: 1.35.3(zod@4.3.4)
       rhachet-artifact: 1.0.1(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       rhachet-artifact-git: 1.1.5
       type-fns: 1.21.0
@@ -9364,13 +9457,13 @@ snapshots:
       - aws-crt
       - ws
 
-  rhachet-brains-xai@0.2.1(@types/node@22.15.21)(rhachet@1.34.0(zod@4.3.4)):
+  rhachet-brains-xai@0.2.1(@types/node@22.15.21)(rhachet@1.35.3(zod@4.3.4)):
     dependencies:
       domain-objects: 0.31.9
       helpful-errors: 1.5.3
       iso-price: 1.1.1(domain-objects@0.31.9)
       openai: 5.8.2(zod@4.3.4)
-      rhachet: 1.34.0(zod@4.3.4)
+      rhachet: 1.35.3(zod@4.3.4)
       rhachet-artifact: 1.0.1(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       rhachet-artifact-git: 1.1.5
       rhachet-roles-bhrain: 0.7.5(@types/node@22.15.21)
@@ -9381,7 +9474,7 @@ snapshots:
       - aws-crt
       - ws
 
-  rhachet-roles-bhrain@0.11.2(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21):
+  rhachet-roles-bhrain@0.12.5(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21):
     dependencies:
       '@anthropic-ai/sdk': 0.51.0
       '@ehmpathy/as-command': 1.0.3
@@ -9398,9 +9491,9 @@ snapshots:
       rhachet-artifact: 1.0.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       rhachet-artifact-git: 1.1.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       serde-fns: 1.2.0
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       type-fns: 1.21.0
-      with-simple-caching: 0.14.2(zod@4.3.4)
+      with-simple-caching: 0.14.2
       wrapper-fns: 1.1.0
       zod: 4.3.4
     transitivePeerDependencies:
@@ -9427,9 +9520,9 @@ snapshots:
       rhachet-artifact: 1.0.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       rhachet-artifact-git: 1.1.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       serde-fns: 1.2.0
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       type-fns: 1.21.0
-      with-simple-caching: 0.14.2(zod@4.3.4)
+      with-simple-caching: 0.14.2
       wrapper-fns: 1.1.0
       zod: 4.3.4
     transitivePeerDependencies:
@@ -9437,15 +9530,16 @@ snapshots:
       - aws-crt
       - ws
 
-  rhachet-roles-bhuild@0.7.0:
+  rhachet-roles-bhuild@0.10.0:
     dependencies:
       domain-objects: 0.31.9
       emoji-space-shim: 0.0.0
       helpful-errors: 1.5.3
+      iso-time: 1.11.3
       test-fns: 1.7.2
       zod: 4.3.4
 
-  rhachet-roles-ehmpathy@1.26.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.34.0(zod@4.3.4)):
+  rhachet-roles-ehmpathy@1.26.5(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(rhachet@1.35.3(zod@4.3.4)):
     dependencies:
       '@atjsh/llmlingua-2': 2.0.3(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(js-tiktoken@1.0.21)
       '@ehmpathy/as-command': 1.0.3
@@ -9459,13 +9553,13 @@ snapshots:
       openai: 5.8.2(zod@4.3.4)
       rhachet-artifact: 1.0.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       rhachet-artifact-git: 1.1.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
-      rhachet-brains-xai: 0.2.1(@types/node@22.15.21)(rhachet@1.34.0(zod@4.3.4))
+      rhachet-brains-xai: 0.2.1(@types/node@22.15.21)(rhachet@1.35.3(zod@4.3.4))
       serde-fns: 1.2.0
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
-      simple-on-disk-cache: 1.7.3(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
+      simple-on-disk-cache: 1.7.3
       type-fns: 1.21.0
       with-simple-cache: 0.15.3(zod@4.3.4)
-      with-simple-caching: 0.14.4(zod@4.3.4)
+      with-simple-caching: 0.14.4
       wrapper-fns: 1.1.7
       zod: 4.3.4
     transitivePeerDependencies:
@@ -9476,9 +9570,12 @@ snapshots:
       - rhachet
       - ws
 
-  rhachet@1.34.0(zod@4.3.4):
+  rhachet@1.35.3(zod@4.3.4):
     dependencies:
+      '@noble/curves': 2.0.1
+      '@noble/hashes': 2.0.1
       '@octokit/auth-app': 8.2.0
+      '@scure/base': 2.0.0
       age-encryption: 0.3.0
       as-procedure: 1.1.11
       bottleneck: 2.19.5
@@ -9622,10 +9719,15 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
-  simple-in-memory-cache@0.4.0(zod@4.3.4):
+  simple-in-memory-cache@0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4):
     dependencies:
       '@ehmpathy/uni-time': 1.9.4(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
     transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - '@tensorflow/tfjs'
+      - '@types/node'
+      - aws-crt
+      - ws
       - zod
 
   simple-log-methods@0.6.1(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4):
@@ -9642,13 +9744,18 @@ snapshots:
       - ws
       - zod
 
-  simple-log-methods@0.6.2(zod@4.3.4):
+  simple-log-methods@0.6.2(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4):
     dependencies:
       '@ehmpathy/error-fns': 1.3.7
       '@ehmpathy/uni-time': 1.9.4(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       domain-glossary-procedure: 1.0.0
       type-fns: 1.21.0
     transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - '@tensorflow/tfjs'
+      - '@types/node'
+      - aws-crt
+      - ws
       - zod
 
   simple-log-methods@0.6.9:
@@ -9657,10 +9764,10 @@ snapshots:
       domain-glossary-procedure: 1.0.0
       domain-objects: 0.31.9
       helpful-errors: 1.5.3
-      iso-time: 1.11.1
+      iso-time: 1.11.3
       type-fns: 1.21.0
 
-  simple-on-disk-cache@1.7.3(zod@4.3.4):
+  simple-on-disk-cache@1.7.3:
     dependencies:
       '@aws-sdk/client-s3': 3.943.0
       '@ehmpathy/uni-time': 1.9.4(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
@@ -9669,11 +9776,10 @@ snapshots:
       hash-fns: 1.1.0
       helpful-errors: 1.5.3
       serde-fns: 1.3.1
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       type-fns: 1.21.0
     transitivePeerDependencies:
       - aws-crt
-      - zod
 
   slash@3.0.0: {}
 
@@ -9770,14 +9876,26 @@ snapshots:
       glob: 7.2.3
       minimatch: 3.1.2
 
-  test-fns@1.15.0(zod@4.3.4):
+  test-fns@1.15.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4):
     dependencies:
       domain-objects: 0.31.7(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       helpful-errors: 1.5.3
       iso-time: 1.11.3
       uuid: 10.0.0
     transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - '@tensorflow/tfjs'
+      - '@types/node'
+      - aws-crt
+      - ws
       - zod
+
+  test-fns@1.15.4:
+    dependencies:
+      domain-objects: 0.31.9
+      helpful-errors: 1.5.3
+      iso-time: 1.11.3
+      uuid: 10.0.0
 
   test-fns@1.4.2:
     dependencies:
@@ -9988,16 +10106,20 @@ snapshots:
     dependencies:
       isexe: 2.0.0
 
-  with-simple-cache@0.15.1(zod@4.3.4):
+  with-simple-cache@0.15.1(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4):
     dependencies:
       '@ehmpathy/uni-time': 1.9.4(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       procedure-fns: 1.0.1
       serde-fns: 1.3.1
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
-      simple-on-disk-cache: 1.7.3(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
+      simple-on-disk-cache: 1.7.3
       type-fns: 1.21.0
     transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - '@tensorflow/tfjs'
+      - '@types/node'
       - aws-crt
+      - ws
       - zod
 
   with-simple-cache@0.15.3(zod@4.3.4):
@@ -10007,36 +10129,34 @@ snapshots:
       helpful-errors: 1.5.3
       procedure-fns: 1.0.1
       serde-fns: 1.3.1
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
-      simple-on-disk-cache: 1.7.3(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
+      simple-on-disk-cache: 1.7.3
       type-fns: 1.21.0
     transitivePeerDependencies:
       - aws-crt
       - zod
 
-  with-simple-caching@0.14.2(zod@4.3.4):
+  with-simple-caching@0.14.2:
     dependencies:
       '@ehmpathy/uni-time': 1.9.4(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       serde-fns: 1.3.1
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
-      simple-on-disk-cache: 1.7.3(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
+      simple-on-disk-cache: 1.7.3
       type-fns: 1.21.0
       visualogic: 1.3.3
     transitivePeerDependencies:
       - aws-crt
-      - zod
 
-  with-simple-caching@0.14.4(zod@4.3.4):
+  with-simple-caching@0.14.4:
     dependencies:
       '@ehmpathy/uni-time': 1.9.4(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
       procedure-fns: 1.0.1
       serde-fns: 1.3.1
-      simple-in-memory-cache: 0.4.0(zod@4.3.4)
-      simple-on-disk-cache: 1.7.3(zod@4.3.4)
+      simple-in-memory-cache: 0.4.0(@huggingface/transformers@3.8.1)(@tensorflow/tfjs@4.22.0(seedrandom@3.0.5))(@types/node@22.15.21)(zod@4.3.4)
+      simple-on-disk-cache: 1.7.3
       type-fns: 1.21.0
     transitivePeerDependencies:
       - aws-crt
-      - zod
 
   word-wrap@1.2.5: {}
 
