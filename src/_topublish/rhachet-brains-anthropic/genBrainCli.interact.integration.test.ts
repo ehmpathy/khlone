@@ -18,9 +18,9 @@ const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
  * .what = await until accumulated onData output matches a predicate
  * .why = replace arbitrary timers with precise promise-based waits
  *
- * .note = auto-accepts the workspace trust prompt and theme picker if detected in PTY output.
- *         genTempDir creates fresh dirs that claude hasn't seen before,
- *         so the trust dialog and theme picker appear on first interact-mode boot.
+ * .note = auto-accepts the theme picker, login method, and workspace trust prompt
+ *         if detected in PTY output. genTempDir creates fresh dirs that claude
+ *         hasn't seen before, so these dialogs appear on first interact-mode boot.
  */
 const awaitOutput = (input: {
   brain: Awaited<ReturnType<typeof genBrainCli>>;
@@ -31,6 +31,7 @@ const awaitOutput = (input: {
     let accumulated = '';
     let trustPromptHandled = false;
     let themePickerHandled = false;
+    let loginMethodHandled = false;
     const timeout = setTimeout(
       () =>
         onFail(
@@ -54,6 +55,20 @@ const awaitOutput = (input: {
       ) {
         themePickerHandled = true;
         input.brain.terminal.write('\r');
+      }
+
+      // auto-accept login method — select option 2 ("Anthropic Console account") for API key auth
+      // note: appears in CI where no cached auth session exists in the fresh temp dir
+      if (
+        !loginMethodHandled &&
+        input.brain.executor.instance &&
+        accumulated.includes('Select') &&
+        accumulated.includes('login') &&
+        accumulated.includes('method')
+      ) {
+        loginMethodHandled = true;
+        // press down arrow to select option 2, then enter
+        input.brain.terminal.write('\x1B[B\r');
       }
 
       // auto-accept workspace trust prompt — option 1 ("Yes, I trust") is pre-selected
