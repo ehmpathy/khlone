@@ -1,25 +1,10 @@
 import { UnexpectedCodePathError } from 'helpful-errors';
-import { genTempDir, given, then, useThen, when } from 'test-fns';
+import { genTempDir, given, then, useBeforeAll, useThen, when } from 'test-fns';
 
 import { genBrainCli } from '../rhachet/genBrainCli';
 import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-
-// use a temp dir as cwd — avoids repo hooks that inject massive context and cause infinite compaction loops
-const CWD = genTempDir({ slug: 'braincli-compact' });
-const CONTEXT = {
-  cwd: CWD,
-  ...genContextBrainAuthAnthropic({
-    via: {
-      apiKey:
-        process.env.ANTHROPIC_API_KEY ??
-        UnexpectedCodePathError.throw(
-          'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
-        ),
-    },
-  }),
-};
 
 // compaction adds an extra summarization API call — allow generous timeout
 jest.setTimeout(300_000);
@@ -43,6 +28,26 @@ const withTimeout = async <T>(input: {
 };
 
 describe('genBrainCli.dispatch.withCompaction', () => {
+  // use a temp dir as cwd — avoids repo hooks that inject massive context and cause infinite compaction loops
+  const scene = useBeforeAll(async () => {
+    const cwd = genTempDir({ slug: 'braincli-compact' });
+    return {
+      cwd,
+      context: {
+        cwd,
+        ...genContextBrainAuthAnthropic({
+          via: {
+            apiKey:
+              process.env.ANTHROPIC_API_KEY ??
+              UnexpectedCodePathError.throw(
+                'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
+              ),
+          },
+        }),
+      },
+    };
+  });
+
   given(
     '[case1] two asks with CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=1 to force compaction',
     () => {
@@ -53,7 +58,10 @@ describe('genBrainCli.dispatch.withCompaction', () => {
           process.env.CLAUDE_AUTOCOMPACT_PCT_OVERRIDE = '1';
 
           try {
-            const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+            const brain = await genBrainCli(
+              { slug: SLUG_HAIKU },
+              scene.context,
+            );
 
             // boot once — both asks on the same process
             await brain.executor.boot({ mode: 'dispatch' });

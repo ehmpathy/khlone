@@ -1,29 +1,38 @@
 import { UnexpectedCodePathError } from 'helpful-errors';
-import { genTempDir, given, then, useThen, when } from 'test-fns';
+import { genTempDir, given, then, useBeforeAll, useThen, when } from 'test-fns';
 
 import { genBrainCli } from '../rhachet/genBrainCli';
 import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = genTempDir({ slug: 'braincli-ask' });
-const CONTEXT = {
-  cwd: CWD,
-  ...genContextBrainAuthAnthropic({
-    via: {
-      apiKey:
-        process.env.ANTHROPIC_API_KEY ??
-        UnexpectedCodePathError.throw(
-          'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
-        ),
-    },
-  }),
-};
 
 describe('genBrainCli.dispatch.ask', () => {
+  const scene = useBeforeAll(async () => {
+    const cwd = genTempDir({ slug: 'braincli-ask' });
+    return {
+      cwd,
+      context: {
+        cwd,
+        ...genContextBrainAuthAnthropic({
+          via: {
+            apiKey:
+              process.env.ANTHROPIC_API_KEY ??
+              UnexpectedCodePathError.throw(
+                'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
+              ),
+          },
+        }),
+      },
+    };
+  });
+
   given('[case1] a valid haiku brain slug', () => {
     when('[t0] genBrainCli is called', () => {
       const brain = useThen('it returns a BrainCli handle', async () => {
-        const result = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const result = await genBrainCli(
+          { slug: SLUG_HAIKU },
+          scene.context,
+        );
         expect(result).toBeDefined();
         expect(result.ask).toBeDefined();
         expect(result.act).toBeDefined();
@@ -43,7 +52,10 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t1] boot dispatch and ask a cheap question', () => {
       const result = useThen('ask succeeds', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli(
+          { slug: SLUG_HAIKU },
+          scene.context,
+        );
 
         // boot dispatch mode
         await brain.executor.boot({ mode: 'dispatch' });
@@ -96,7 +108,10 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t2] terminal.onData fires with output chunks', () => {
       const result = useThen('data callback fires', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli(
+          { slug: SLUG_HAIKU },
+          scene.context,
+        );
 
         // register data callback before boot
         const chunks: string[] = [];
@@ -119,7 +134,10 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t3] terminal.onExit fires on kill', () => {
       const result = useThen('exit callback fires', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli(
+          { slug: SLUG_HAIKU },
+          scene.context,
+        );
 
         // register exit callback with fire counter
         let fireCount = 0;
@@ -158,7 +176,10 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t4] terminal.write sends raw data to dispatch stdin', () => {
       const result = useThen('write succeeds without error', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli(
+          { slug: SLUG_HAIKU },
+          scene.context,
+        );
 
         // boot dispatch mode
         await brain.executor.boot({ mode: 'dispatch' });
@@ -187,7 +208,10 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t5] series is preserved across reboot', () => {
       const result = useThen('reboot preserves series', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli(
+          { slug: SLUG_HAIKU },
+          scene.context,
+        );
 
         // boot and ask to populate series
         await brain.executor.boot({ mode: 'dispatch' });

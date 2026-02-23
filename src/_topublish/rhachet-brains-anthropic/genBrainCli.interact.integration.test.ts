@@ -1,31 +1,26 @@
 import { UnexpectedCodePathError } from 'helpful-errors';
-import { genTempDir, getError, given, then, useThen, when } from 'test-fns';
+import {
+  genTempDir,
+  getError,
+  given,
+  then,
+  useBeforeAll,
+  useThen,
+  when,
+} from 'test-fns';
 
 import { genBrainCli } from '../rhachet/genBrainCli';
 import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = genTempDir({ slug: 'braincli-interact' });
-const CONTEXT = {
-  cwd: CWD,
-  ...genContextBrainAuthAnthropic({
-    via: {
-      apiKey:
-        process.env.ANTHROPIC_API_KEY ??
-        UnexpectedCodePathError.throw(
-          'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
-        ),
-    },
-  }),
-};
 
 /**
  * .what = await until accumulated onData output matches a predicate
  * .why = replace arbitrary timers with precise promise-based waits
  *
- * .note = auto-accepts the workspace trust prompt if detected in PTY output.
+ * .note = auto-accepts the workspace trust prompt and theme picker if detected in PTY output.
  *         genTempDir creates fresh dirs that claude hasn't seen before,
- *         so the trust dialog appears on first interact-mode boot.
+ *         so the trust dialog and theme picker appear on first interact-mode boot.
  */
 const awaitOutput = (input: {
   brain: Awaited<ReturnType<typeof genBrainCli>>;
@@ -35,6 +30,7 @@ const awaitOutput = (input: {
   new Promise((onDone, onFail) => {
     let accumulated = '';
     let trustPromptHandled = false;
+    let themePickerHandled = false;
     const timeout = setTimeout(
       () =>
         onFail(
@@ -46,6 +42,19 @@ const awaitOutput = (input: {
     );
     input.brain.terminal.onData((chunk) => {
       accumulated += chunk;
+
+      // auto-accept theme picker — option 1 ("Dark mode") is pre-selected
+      // note: appears on first boot in a fresh directory (no prior theme)
+      if (
+        !themePickerHandled &&
+        input.brain.executor.instance &&
+        accumulated.includes('Choose') &&
+        accumulated.includes('text') &&
+        accumulated.includes('style')
+      ) {
+        themePickerHandled = true;
+        input.brain.terminal.write('\r');
+      }
 
       // auto-accept workspace trust prompt — option 1 ("Yes, I trust") is pre-selected
       // note: PTY output has ANSI escape sequences between words, so match single words
@@ -68,10 +77,29 @@ const awaitOutput = (input: {
   });
 
 describe('genBrainCli.interact', () => {
+  const scene = useBeforeAll(async () => {
+    const cwd = genTempDir({ slug: 'braincli-interact' });
+    return {
+      cwd,
+      context: {
+        cwd,
+        ...genContextBrainAuthAnthropic({
+          via: {
+            apiKey:
+              process.env.ANTHROPIC_API_KEY ??
+              UnexpectedCodePathError.throw(
+                'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
+              ),
+          },
+        }),
+      },
+    };
+  });
+
   given('[case1] a handle booted in interact mode', () => {
     when('[t0] boot interact mode', () => {
       const result = useThen('interact boot succeeds', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // boot interact mode
         await brain.executor.boot({ mode: 'interact' });
@@ -108,7 +136,7 @@ describe('genBrainCli.interact', () => {
 
     when('[t1] terminal.write sends a prompt and receives a response', () => {
       const result = useThen('write and read succeeds', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // boot interact mode
         await brain.executor.boot({ mode: 'interact' });
@@ -150,7 +178,7 @@ describe('genBrainCli.interact', () => {
 
     when('[t2] terminal.resize does not crash in interact mode', () => {
       const result = useThen('resize succeeds', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // boot interact mode
         await brain.executor.boot({ mode: 'interact' });
@@ -183,7 +211,7 @@ describe('genBrainCli.interact', () => {
 
     when('[t3.1] ask is called on interact handle', () => {
       then('it throws an error', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
         await brain.executor.boot({ mode: 'interact' });
 
         const error = await getError(brain.ask({ prompt: 'hello' }));
@@ -197,7 +225,7 @@ describe('genBrainCli.interact', () => {
 
     when('[t3.2] act is called on interact handle', () => {
       then('it throws an error', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
         await brain.executor.boot({ mode: 'interact' });
 
         const error = await getError(brain.act({ prompt: 'hello' }));
@@ -215,7 +243,10 @@ describe('genBrainCli.interact', () => {
         const result = useThen(
           'brain recalls prior dispatch context in interact mode',
           async () => {
-            const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+            const brain = await genBrainCli(
+              { slug: SLUG_HAIKU },
+              scene.context,
+            );
 
             // boot dispatch and tell the brain a unique word
             await brain.executor.boot({ mode: 'dispatch' });
@@ -273,7 +304,7 @@ describe('genBrainCli.interact', () => {
 
     when('[t5] dispatch -> interact preserves series', () => {
       const result = useThen('mode switch preserves series', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // boot dispatch and ask to populate series
         await brain.executor.boot({ mode: 'dispatch' });

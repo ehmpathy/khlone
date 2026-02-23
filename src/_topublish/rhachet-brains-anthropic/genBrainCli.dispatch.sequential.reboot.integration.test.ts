@@ -1,29 +1,35 @@
 import { UnexpectedCodePathError } from 'helpful-errors';
-import { genTempDir, given, then, useThen, when } from 'test-fns';
+import { genTempDir, given, then, useBeforeAll, useThen, when } from 'test-fns';
 
 import { genBrainCli } from '../rhachet/genBrainCli';
 import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
-const CWD = genTempDir({ slug: 'braincli-reboot' });
-const CONTEXT = {
-  cwd: CWD,
-  ...genContextBrainAuthAnthropic({
-    via: {
-      apiKey:
-        process.env.ANTHROPIC_API_KEY ??
-        UnexpectedCodePathError.throw(
-          'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
-        ),
-    },
-  }),
-};
 
 describe('genBrainCli.dispatch.sequential.reboot', () => {
+  const scene = useBeforeAll(async () => {
+    const cwd = genTempDir({ slug: 'braincli-reboot' });
+    return {
+      cwd,
+      context: {
+        cwd,
+        ...genContextBrainAuthAnthropic({
+          via: {
+            apiKey:
+              process.env.ANTHROPIC_API_KEY ??
+              UnexpectedCodePathError.throw(
+                'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
+              ),
+          },
+        }),
+      },
+    };
+  });
+
   given('[case1] sequential asks across reboots (with --resume)', () => {
     when('[t0] two asks are dispatched', () => {
       const result = useThen('both asks succeed', async () => {
-        const brain = await genBrainCli({ slug: SLUG_HAIKU }, CONTEXT);
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // boot and first ask
         await brain.executor.boot({ mode: 'dispatch' });
