@@ -15,12 +15,73 @@ import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
 
 /**
+ * .what = register one-shot TUI dialog auto-accept handlers on a brain's terminal
+ * .why = prevents duplicate keystrokes when multiple awaitOutput calls are active
+ *
+ * .note = must be called ONCE per brain after interact boot, not inside awaitOutput.
+ *         handlers accumulate their own output and fire at most once each.
+ *         genTempDir creates fresh dirs that claude hasn't seen before, so these
+ *         dialogs appear on first interact-mode boot.
+ */
+const registerDialogDismissers = (input: {
+  brain: Awaited<ReturnType<typeof genBrainCli>>;
+}): void => {
+  let accumulated = '';
+  let themePickerHandled = false;
+  let loginMethodHandled = false;
+  let trustPromptHandled = false;
+
+  input.brain.terminal.onData((chunk) => {
+    accumulated += chunk;
+
+    // auto-accept theme picker — option 1 ("Dark mode") is pre-selected
+    // note: appears on first boot in a fresh directory (no prior theme)
+    if (
+      !themePickerHandled &&
+      input.brain.executor.instance &&
+      accumulated.includes('Choose') &&
+      accumulated.includes('text') &&
+      accumulated.includes('style')
+    ) {
+      themePickerHandled = true;
+      input.brain.terminal.write('\r');
+    }
+
+    // auto-accept login method — select option 2 ("Anthropic Console account") for API key auth
+    // note: appears in CI where no cached auth session exists in the fresh temp dir
+    if (
+      !loginMethodHandled &&
+      input.brain.executor.instance &&
+      accumulated.includes('Select') &&
+      accumulated.includes('login') &&
+      accumulated.includes('method')
+    ) {
+      loginMethodHandled = true;
+      // press down arrow to select option 2, then enter
+      input.brain.terminal.write('\x1B[B\r');
+    }
+
+    // auto-accept workspace trust prompt — option 1 ("Yes, I trust") is pre-selected
+    // note: PTY output has ANSI escape sequences between words, so match single words
+    // guard: process may have exited between data buffer and callback — skip write if dead
+    if (
+      !trustPromptHandled &&
+      input.brain.executor.instance &&
+      accumulated.includes('safety') &&
+      accumulated.includes('trust')
+    ) {
+      trustPromptHandled = true;
+      input.brain.terminal.write('\r');
+    }
+  });
+};
+
+/**
  * .what = await until accumulated onData output matches a predicate
  * .why = replace arbitrary timers with precise promise-based waits
  *
- * .note = auto-accepts the theme picker, login method, and workspace trust prompt
- *         if detected in PTY output. genTempDir creates fresh dirs that claude
- *         hasn't seen before, so these dialogs appear on first interact-mode boot.
+ * .note = dialog handlers are NOT in this function — call registerDialogDismissers
+ *         once per brain after boot to avoid duplicate keystroke from concurrent calls
  */
 const awaitOutput = (input: {
   brain: Awaited<ReturnType<typeof genBrainCli>>;
@@ -29,9 +90,6 @@ const awaitOutput = (input: {
 }): Promise<string> =>
   new Promise((onDone, onFail) => {
     let accumulated = '';
-    let trustPromptHandled = false;
-    let themePickerHandled = false;
-    let loginMethodHandled = false;
     const timeout = setTimeout(
       () =>
         onFail(
@@ -43,46 +101,6 @@ const awaitOutput = (input: {
     );
     input.brain.terminal.onData((chunk) => {
       accumulated += chunk;
-
-      // auto-accept theme picker — option 1 ("Dark mode") is pre-selected
-      // note: appears on first boot in a fresh directory (no prior theme)
-      if (
-        !themePickerHandled &&
-        input.brain.executor.instance &&
-        accumulated.includes('Choose') &&
-        accumulated.includes('text') &&
-        accumulated.includes('style')
-      ) {
-        themePickerHandled = true;
-        input.brain.terminal.write('\r');
-      }
-
-      // auto-accept login method — select option 2 ("Anthropic Console account") for API key auth
-      // note: appears in CI where no cached auth session exists in the fresh temp dir
-      if (
-        !loginMethodHandled &&
-        input.brain.executor.instance &&
-        accumulated.includes('Select') &&
-        accumulated.includes('login') &&
-        accumulated.includes('method')
-      ) {
-        loginMethodHandled = true;
-        // press down arrow to select option 2, then enter
-        input.brain.terminal.write('\x1B[B\r');
-      }
-
-      // auto-accept workspace trust prompt — option 1 ("Yes, I trust") is pre-selected
-      // note: PTY output has ANSI escape sequences between words, so match single words
-      // guard: process may have exited between data buffer and callback — skip write if dead
-      if (
-        !trustPromptHandled &&
-        input.brain.executor.instance &&
-        accumulated.includes('safety') &&
-        accumulated.includes('trust')
-      ) {
-        trustPromptHandled = true;
-        input.brain.terminal.write('\r');
-      }
 
       if (input.predicate(accumulated)) {
         clearTimeout(timeout);
@@ -118,6 +136,7 @@ describe('genBrainCli.interact', () => {
 
         // boot interact mode
         await brain.executor.boot({ mode: 'interact' });
+        registerDialogDismissers({ brain });
 
         const instanceMode = brain.executor.instance?.mode ?? null;
         const instancePid = brain.executor.instance?.pid ?? null;
@@ -155,6 +174,7 @@ describe('genBrainCli.interact', () => {
 
         // boot interact mode
         await brain.executor.boot({ mode: 'interact' });
+        registerDialogDismissers({ brain });
 
         // await the CLI TUI to fully render (check for `shortcuts` token in PTY output)
         await awaitOutput({
@@ -197,6 +217,7 @@ describe('genBrainCli.interact', () => {
 
         // boot interact mode
         await brain.executor.boot({ mode: 'interact' });
+        registerDialogDismissers({ brain });
 
         // await the CLI TUI to render
         await awaitOutput({
@@ -272,6 +293,7 @@ describe('genBrainCli.interact', () => {
 
             // switch to interact mode (resumes the same session)
             await brain.executor.boot({ mode: 'interact' });
+            registerDialogDismissers({ brain });
 
             // register the response listener BEFORE the TUI settles — captures all data from boot
             const recallPromise = awaitOutput({
