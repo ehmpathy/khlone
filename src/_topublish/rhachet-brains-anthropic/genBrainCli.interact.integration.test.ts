@@ -75,12 +75,12 @@ const registerDialogDismissers = (input: {
       accumulated.includes('method')
     ) {
       loginMethodHandled = true;
-      // press down arrow to select option 2, then enter
-      writeAfterDelay({
-        brain: input.brain,
-        keys: '\x1B[B\r',
-        delayMs: 500,
-      });
+      // press down arrow to select option 2, then enter after a gap
+      // note: must be two separate writes — single '\x1B[B\r' sends both in one
+      //       PTY buffer and the TUI processes \r before the escape sequence
+      //       updates the selection state
+      writeAfterDelay({ brain: input.brain, keys: '\x1B[B', delayMs: 500 });
+      writeAfterDelay({ brain: input.brain, keys: '\r', delayMs: 800 });
     }
 
     // auto-accept workspace trust prompt — option 1 ("Yes, I trust") is pre-selected
