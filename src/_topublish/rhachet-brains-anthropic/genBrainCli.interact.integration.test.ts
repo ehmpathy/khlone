@@ -15,6 +15,22 @@ import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
 
 /**
+ * .what = send a keypress to the brain's terminal after a delay
+ * .why = TUI components (theme picker, login method, trust prompt) need time to
+ *        initialize their input handlers after render — a synchronous write in the
+ *        onData callback arrives before the component is ready to accept input
+ */
+const writeAfterDelay = (input: {
+  brain: Awaited<ReturnType<typeof genBrainCli>>;
+  keys: string;
+  delayMs: number;
+}): void => {
+  setTimeout(() => {
+    if (input.brain.executor.instance) input.brain.terminal.write(input.keys);
+  }, input.delayMs);
+};
+
+/**
  * .what = register one-shot TUI dialog auto-accept handlers on a brain's terminal
  * .why = prevents duplicate keystrokes when multiple awaitOutput calls are active
  *
@@ -22,6 +38,8 @@ const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
  *         handlers accumulate their own output and fire at most once each.
  *         genTempDir creates fresh dirs that claude hasn't seen before, so these
  *         dialogs appear on first interact-mode boot.
+ *         each keypress is delayed 500ms to let the TUI component initialize its
+ *         input handler after it renders output.
  */
 const registerDialogDismissers = (input: {
   brain: Awaited<ReturnType<typeof genBrainCli>>;
@@ -44,7 +62,7 @@ const registerDialogDismissers = (input: {
       accumulated.includes('style')
     ) {
       themePickerHandled = true;
-      input.brain.terminal.write('\r');
+      writeAfterDelay({ brain: input.brain, keys: '\r', delayMs: 500 });
     }
 
     // auto-accept login method — select option 2 ("Anthropic Console account") for API key auth
@@ -58,7 +76,11 @@ const registerDialogDismissers = (input: {
     ) {
       loginMethodHandled = true;
       // press down arrow to select option 2, then enter
-      input.brain.terminal.write('\x1B[B\r');
+      writeAfterDelay({
+        brain: input.brain,
+        keys: '\x1B[B\r',
+        delayMs: 500,
+      });
     }
 
     // auto-accept workspace trust prompt — option 1 ("Yes, I trust") is pre-selected
@@ -71,7 +93,7 @@ const registerDialogDismissers = (input: {
       accumulated.includes('trust')
     ) {
       trustPromptHandled = true;
-      input.brain.terminal.write('\r');
+      writeAfterDelay({ brain: input.brain, keys: '\r', delayMs: 500 });
     }
   });
 };
