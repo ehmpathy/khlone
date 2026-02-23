@@ -29,10 +29,7 @@ describe('genBrainCli.dispatch.ask', () => {
   given('[case1] a valid haiku brain slug', () => {
     when('[t0] genBrainCli is called', () => {
       const brain = useThen('it returns a BrainCli handle', async () => {
-        const result = await genBrainCli(
-          { slug: SLUG_HAIKU },
-          scene.context,
-        );
+        const result = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
         expect(result).toBeDefined();
         expect(result.ask).toBeDefined();
         expect(result.act).toBeDefined();
@@ -52,10 +49,7 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t1] boot dispatch and ask a cheap question', () => {
       const result = useThen('ask succeeds', async () => {
-        const brain = await genBrainCli(
-          { slug: SLUG_HAIKU },
-          scene.context,
-        );
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // boot dispatch mode
         await brain.executor.boot({ mode: 'dispatch' });
@@ -108,10 +102,7 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t2] terminal.onData fires with output chunks', () => {
       const result = useThen('data callback fires', async () => {
-        const brain = await genBrainCli(
-          { slug: SLUG_HAIKU },
-          scene.context,
-        );
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // register data callback before boot
         const chunks: string[] = [];
@@ -134,10 +125,7 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t3] terminal.onExit fires on kill', () => {
       const result = useThen('exit callback fires', async () => {
-        const brain = await genBrainCli(
-          { slug: SLUG_HAIKU },
-          scene.context,
-        );
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // register exit callback with fire counter
         let fireCount = 0;
@@ -176,10 +164,7 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t4] terminal.write sends raw data to dispatch stdin', () => {
       const result = useThen('write succeeds without error', async () => {
-        const brain = await genBrainCli(
-          { slug: SLUG_HAIKU },
-          scene.context,
-        );
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // boot dispatch mode
         await brain.executor.boot({ mode: 'dispatch' });
@@ -208,10 +193,7 @@ describe('genBrainCli.dispatch.ask', () => {
 
     when('[t5] series is preserved across reboot', () => {
       const result = useThen('reboot preserves series', async () => {
-        const brain = await genBrainCli(
-          { slug: SLUG_HAIKU },
-          scene.context,
-        );
+        const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
         // boot and ask to populate series
         await brain.executor.boot({ mode: 'dispatch' });

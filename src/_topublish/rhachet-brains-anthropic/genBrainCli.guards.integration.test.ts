@@ -1,5 +1,12 @@
 import { BadRequestError, UnexpectedCodePathError } from 'helpful-errors';
-import { genTempDir, getError, given, then, useBeforeAll, when } from 'test-fns';
+import {
+  genTempDir,
+  getError,
+  given,
+  then,
+  useBeforeAll,
+  when,
+} from 'test-fns';
 
 import { genBrainCli } from '../rhachet/genBrainCli';
 import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';

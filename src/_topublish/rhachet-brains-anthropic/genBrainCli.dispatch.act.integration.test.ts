@@ -1,8 +1,8 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { UnexpectedCodePathError } from 'helpful-errors';
 import { genTempDir, given, then, useBeforeAll, useThen, when } from 'test-fns';
 
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { genBrainCli } from '../rhachet/genBrainCli';
 import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 
