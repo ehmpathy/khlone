@@ -12,7 +12,10 @@ export const genBrainCli = async <
   TBrainAuthSupply extends Record<string, any> = Record<string, unknown>,
 >(
   input: { slug: string },
-  context: { cwd: string } & ContextBrainAuth<TBrainAuthSupply>,
+  context: {
+    cwd: string;
+    env?: Record<string, string>;
+  } & ContextBrainAuth<TBrainAuthSupply>,
 ): Promise<BrainCli> => {
   // extract supplier prefix from slug
   const supplierSlug = getOneSupplierSlugFromBrainSlug({

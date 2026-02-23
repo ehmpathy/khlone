@@ -1,4 +1,6 @@
+import * as fs from 'fs';
 import { UnexpectedCodePathError } from 'helpful-errors';
+import * as path from 'path';
 import {
   genTempDir,
   getError,
@@ -15,95 +17,8 @@ import { genContextBrainAuthAnthropic } from './genContextBrainAuthAnthropic';
 const SLUG_HAIKU = 'claude@anthropic/claude/haiku';
 
 /**
- * .what = send a keypress to the brain's terminal after a delay
- * .why = TUI components (theme picker, login method, trust prompt) need time to
- *        initialize their input handlers after render — a synchronous write in the
- *        onData callback arrives before the component is ready to accept input
- */
-const writeAfterDelay = (input: {
-  brain: Awaited<ReturnType<typeof genBrainCli>>;
-  keys: string;
-  delayMs: number;
-}): void => {
-  setTimeout(() => {
-    if (input.brain.executor.instance) input.brain.terminal.write(input.keys);
-  }, input.delayMs);
-};
-
-/**
- * .what = register one-shot TUI dialog auto-accept handlers on a brain's terminal
- * .why = prevents duplicate keystrokes when multiple awaitOutput calls are active
- *
- * .note = must be called ONCE per brain after interact boot, not inside awaitOutput.
- *         handlers accumulate their own output and fire at most once each.
- *         genTempDir creates fresh dirs that claude hasn't seen before, so these
- *         dialogs appear on first interact-mode boot.
- *         each keypress is delayed 500ms to let the TUI component initialize its
- *         input handler after it renders output.
- */
-const registerDialogDismissers = (input: {
-  brain: Awaited<ReturnType<typeof genBrainCli>>;
-}): void => {
-  let accumulated = '';
-  let themePickerHandled = false;
-  let loginMethodHandled = false;
-  let trustPromptHandled = false;
-
-  input.brain.terminal.onData((chunk) => {
-    accumulated += chunk;
-
-    // auto-accept theme picker — option 1 ("Dark mode") is pre-selected
-    // note: appears on first boot in a fresh directory (no prior theme)
-    if (
-      !themePickerHandled &&
-      input.brain.executor.instance &&
-      accumulated.includes('Choose') &&
-      accumulated.includes('text') &&
-      accumulated.includes('style')
-    ) {
-      themePickerHandled = true;
-      writeAfterDelay({ brain: input.brain, keys: '\r', delayMs: 500 });
-    }
-
-    // auto-accept login method — select option 2 ("Anthropic Console account") for API key auth
-    // note: appears in CI where no cached auth session exists in the fresh temp dir
-    if (
-      !loginMethodHandled &&
-      input.brain.executor.instance &&
-      accumulated.includes('Select') &&
-      accumulated.includes('login') &&
-      accumulated.includes('method')
-    ) {
-      loginMethodHandled = true;
-      // press down arrow to select option 2, then enter after a gap
-      // note: must be two separate writes — single '\x1B[B\r' sends both in one
-      //       PTY buffer and the TUI processes \r before the escape sequence
-      //       updates the selection state
-      writeAfterDelay({ brain: input.brain, keys: '\x1B[B', delayMs: 500 });
-      writeAfterDelay({ brain: input.brain, keys: '\r', delayMs: 800 });
-    }
-
-    // auto-accept workspace trust prompt — option 1 ("Yes, I trust") is pre-selected
-    // note: PTY output has ANSI escape sequences between words, so match single words
-    // guard: process may have exited between data buffer and callback — skip write if dead
-    if (
-      !trustPromptHandled &&
-      input.brain.executor.instance &&
-      accumulated.includes('safety') &&
-      accumulated.includes('trust')
-    ) {
-      trustPromptHandled = true;
-      writeAfterDelay({ brain: input.brain, keys: '\r', delayMs: 500 });
-    }
-  });
-};
-
-/**
  * .what = await until accumulated onData output matches a predicate
  * .why = replace arbitrary timers with precise promise-based waits
- *
- * .note = dialog handlers are NOT in this function — call registerDialogDismissers
- *         once per brain after boot to avoid duplicate keystroke from concurrent calls
  */
 const awaitOutput = (input: {
   brain: Awaited<ReturnType<typeof genBrainCli>>;
@@ -131,21 +46,121 @@ const awaitOutput = (input: {
     });
   });
 
+/**
+ * .what = create an isolated claude config dir with onboard pre-completed
+ * .why = prevents first-run dialogs (theme, login method, trust) from appear
+ *        in interact mode — the TUI boots straight to the prompt
+ *
+ * .note = claude code reads `~/.claude.json` (tied to HOME) for onboard state.
+ *         by set HOME to a temp dir with a pre-written `.claude.json`, each
+ *         brain instance gets isolated config and skips first-run entirely.
+ */
+const genClaudeHomeDir = (input: { apiKey: string }): string => {
+  const homeDir = genTempDir({ slug: 'braincli-home' });
+
+  // pre-write global user config — skip all first-run dialogs
+  const keySuffix = input.apiKey.slice(-20);
+  fs.writeFileSync(
+    path.join(homeDir, '.claude.json'),
+    JSON.stringify({
+      hasCompletedOnboarding: true,
+      numStartups: 10,
+      customApiKeyResponses: {
+        approved: [keySuffix],
+      },
+    }),
+  );
+
+  // pre-write config dir with api key approval
+  const claudeDir = path.join(homeDir, '.claude');
+  fs.mkdirSync(claudeDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(claudeDir, 'config.json'),
+    JSON.stringify({
+      primaryApiKey: input.apiKey,
+      customApiKeyResponses: {
+        approved: [keySuffix],
+      },
+    }),
+  );
+
+  return homeDir;
+};
+
+/**
+ * .what = await TUI ready state, auto-dismiss any dialogs that appear first
+ * .why = interact mode may show per-workspace trust dialog and/or API key
+ *        confirm dialog before the main TUI loads. this helper registers ONE
+ *        listener that watches for and dismisses all known dialogs, then
+ *        completes when the main TUI renders (detected via `shortcuts` token).
+ *
+ * .note = single listener avoids the race condition where a dialog is dismissed
+ *         but the `shortcuts` listener is attached too late to capture the TUI render.
+ */
+const awaitTuiReady = (input: {
+  brain: Awaited<ReturnType<typeof genBrainCli>>;
+  timeoutMs: number;
+}): Promise<string> =>
+  new Promise((onDone, onFail) => {
+    let accumulated = '';
+    let trustDismissed = false;
+    let apiKeyDismissed = false;
+    const timeout = setTimeout(
+      () =>
+        onFail(
+          new Error(
+            `awaitTuiReady timed out after ${input.timeoutMs}ms. accumulated: ${accumulated}`,
+          ),
+        ),
+      input.timeoutMs,
+    );
+    input.brain.terminal.onData((chunk) => {
+      accumulated += chunk;
+
+      // auto-dismiss per-workspace trust dialog — "Yes, I trust" is pre-selected
+      if (!trustDismissed && accumulated.includes('trust')) {
+        trustDismissed = true;
+        input.brain.terminal.write('\r');
+      }
+
+      // auto-dismiss API key confirm dialog — "No" is pre-selected, press up then enter for "Yes"
+      if (
+        !apiKeyDismissed &&
+        accumulated.includes('API') &&
+        accumulated.includes('key')
+      ) {
+        apiKeyDismissed = true;
+        // select "Yes" (option 1) — up arrow then enter
+        input.brain.terminal.write('\x1B[A\r');
+      }
+
+      // done when main TUI is ready
+      if (accumulated.includes('shortcuts')) {
+        clearTimeout(timeout);
+        onDone(accumulated);
+      }
+    });
+  });
+
 describe('genBrainCli.interact', () => {
   const scene = useBeforeAll(async () => {
     const cwd = genTempDir({ slug: 'braincli-interact' });
+    const apiKey =
+      process.env.ANTHROPIC_API_KEY ??
+      UnexpectedCodePathError.throw(
+        'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
+      );
+
+    // isolated claude config per test suite — skips first-run dialogs
+    const homeDir = genClaudeHomeDir({ apiKey });
+
     return {
       cwd,
       context: {
         cwd,
+        env: { HOME: homeDir },
         ...genContextBrainAuthAnthropic({
-          via: {
-            apiKey:
-              process.env.ANTHROPIC_API_KEY ??
-              UnexpectedCodePathError.throw(
-                'ANTHROPIC_API_KEY must be set via use.apikeys.sh',
-              ),
-          },
+          via: { apiKey },
         }),
       },
     };
@@ -156,9 +171,8 @@ describe('genBrainCli.interact', () => {
       const result = useThen('interact boot succeeds', async () => {
         const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
-        // boot interact mode
+        // boot interact mode — first-run pre-completed via isolated HOME config
         await brain.executor.boot({ mode: 'interact' });
-        registerDialogDismissers({ brain });
 
         const instanceMode = brain.executor.instance?.mode ?? null;
         const instancePid = brain.executor.instance?.pid ?? null;
@@ -194,16 +208,9 @@ describe('genBrainCli.interact', () => {
       const result = useThen('write and read succeeds', async () => {
         const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
-        // boot interact mode
+        // boot interact mode — auto-dismiss any dialogs, await TUI ready
         await brain.executor.boot({ mode: 'interact' });
-        registerDialogDismissers({ brain });
-
-        // await the CLI TUI to fully render (check for `shortcuts` token in PTY output)
-        await awaitOutput({
-          brain,
-          predicate: (acc) => acc.includes('shortcuts'),
-          timeoutMs: 15_000,
-        });
+        await awaitTuiReady({ brain, timeoutMs: 30_000 });
 
         // let the TUI settle — it emits escape sequences after the prompt
         await new Promise((r) => setTimeout(r, 2_000));
@@ -237,16 +244,9 @@ describe('genBrainCli.interact', () => {
       const result = useThen('resize succeeds', async () => {
         const brain = await genBrainCli({ slug: SLUG_HAIKU }, scene.context);
 
-        // boot interact mode
+        // boot interact mode — auto-dismiss any dialogs, await TUI ready
         await brain.executor.boot({ mode: 'interact' });
-        registerDialogDismissers({ brain });
-
-        // await the CLI TUI to render
-        await awaitOutput({
-          brain,
-          predicate: (acc) => acc.includes('shortcuts'),
-          timeoutMs: 15_000,
-        });
+        await awaitTuiReady({ brain, timeoutMs: 30_000 });
 
         // resize the terminal — should not throw
         brain.terminal.resize({ cols: 80, rows: 24 });
@@ -315,7 +315,6 @@ describe('genBrainCli.interact', () => {
 
             // switch to interact mode (resumes the same session)
             await brain.executor.boot({ mode: 'interact' });
-            registerDialogDismissers({ brain });
 
             // register the response listener BEFORE the TUI settles — captures all data from boot
             const recallPromise = awaitOutput({
@@ -324,12 +323,8 @@ describe('genBrainCli.interact', () => {
               timeoutMs: 90_000,
             });
 
-            // await the CLI TUI to fully render
-            await awaitOutput({
-              brain,
-              predicate: (acc) => acc.includes('shortcuts'),
-              timeoutMs: 30_000,
-            });
+            // auto-dismiss any dialogs, await TUI ready
+            await awaitTuiReady({ brain, timeoutMs: 30_000 });
 
             // guard: verify process survived the TUI boot
             if (!brain.executor.instance)

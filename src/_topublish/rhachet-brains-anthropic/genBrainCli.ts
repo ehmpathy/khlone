@@ -37,7 +37,7 @@ const getOneClaudeCliPath = (): string => {
  */
 export const genBrainCli = async (
   input: { slug: string },
-  context: { cwd: string } & ContextBrainAuth<{
+  context: { cwd: string; env?: Record<string, string> } & ContextBrainAuth<{
     anthropic?: BrainAuthAnthropic;
   }>,
 ): Promise<BrainCli> => {
@@ -77,12 +77,18 @@ export const genBrainCli = async (
       ...baseEnv
     } = process.env;
 
-    // api key mode
+    // merge caller-provided env overrides (e.g., HOME for config isolation)
+    const envWithOverrides = { ...baseEnv, ...context.env };
+
+    // api key mode — auth-derived key always wins over overrides
     if (authAnthropic.via.apiKey)
-      return { ...baseEnv, ANTHROPIC_API_KEY: authAnthropic.via.apiKey };
+      return {
+        ...envWithOverrides,
+        ANTHROPIC_API_KEY: authAnthropic.via.apiKey,
+      };
 
     // oauth mode — clean env, claude CLI handles its own oauth
-    return baseEnv;
+    return envWithOverrides;
   })();
 
   // lookup pinned CLI entry point — fail fast if not installed
